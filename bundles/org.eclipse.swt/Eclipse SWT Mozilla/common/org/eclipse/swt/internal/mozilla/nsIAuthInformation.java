@@ -27,6 +27,7 @@
  * ***** END LICENSE BLOCK ***** */
 package org.eclipse.swt.internal.mozilla;
 
+import org.eclipse.swt.SWT;
 
 public class nsIAuthInformation extends nsISupports {
 
@@ -46,6 +47,11 @@ public class nsIAuthInformation extends nsISupports {
 	public static final int AUTH_PROXY = 2;
 	public static final int NEED_DOMAIN = 4;
 	public static final int ONLY_PASSWORD = 8;
+	public static final int PREVIOUS_FAILED = 16;
+
+	public int GetFlags(long[] /*int*/ aFlags) {
+		return XPCOM.VtblCall(nsISupports.LAST_METHOD_ID + 1, getAddress(), aFlags);
+	}
 
 	public int GetRealm(long /*int*/ aRealm) {
 		return XPCOM.VtblCall(nsISupports.LAST_METHOD_ID + 2, getAddress(), aRealm);
@@ -65,5 +71,24 @@ public class nsIAuthInformation extends nsISupports {
 
 	public int SetPassword(long /*int*/ aPassword) {
 		return XPCOM.VtblCall(nsISupports.LAST_METHOD_ID + 7, getAddress(), aPassword);
+	}
+
+	public int GetDomain(long /*int*/ aDomain) {
+		return XPCOM.VtblCall(nsISupports.LAST_METHOD_ID + 8, getAddress(), aDomain);
+	}
+
+	public int SetDomain(long /*int*/ aDomain) {
+		return XPCOM.VtblCall(nsISupports.LAST_METHOD_ID + 9, getAddress(), aDomain);
+	}
+
+	public void setCredentials(String username, String password) {
+		nsEmbedString string = new nsEmbedString (username);
+		int rc2 = SetUsername(string.getAddress ());
+		if (rc2 != XPCOM.NS_OK) SWT.error (rc2);
+		string.dispose ();
+		string = new nsEmbedString (password);
+		rc2 = SetPassword(string.getAddress ());
+		if (rc2 != XPCOM.NS_OK) SWT.error (rc2);
+		string.dispose ();
 	}
 }

@@ -1660,8 +1660,15 @@ long /*int*/ gtk_window_state_event (long /*int*/ widget, long /*int*/ event) {
 public void open () {
 	checkWidget ();
 	bringToTop (false);
-	if (Shell.class.isInstance(getParent()) && !getParent().isVisible())
-		Shell.class.cast(getParent()).open();
+
+//	commented out changes added by:
+//	https://bugs.eclipse.org/bugs/show_bug.cgi?id=462637
+//	this causes any call to new Shell(new Shell()) to open additional empty shell.
+//	see 338690 and 338705
+
+//	if (Shell.class.isInstance(getParent()) && !getParent().isVisible())
+//		Shell.class.cast(getParent()).open();
+
 	setVisible (true);
 	if (isDisposed ()) return;
 	/*
@@ -2338,6 +2345,7 @@ public void setVisible (boolean visible) {
 		setLocationInPixels(oldX, oldY);
 	}
 	int mask = SWT.PRIMARY_MODAL | SWT.APPLICATION_MODAL | SWT.SYSTEM_MODAL;
+	int maskModeless = SWT.CLOSE | SWT.MODELESS| SWT.BORDER | SWT.TITLE;
 	if ((style & mask) != 0) {
 		if (visible) {
 			display.setModalShell (this);
@@ -2346,7 +2354,10 @@ public void setVisible (boolean visible) {
 			display.clearModal (this);
 			OS.gtk_window_set_modal (shellHandle, false);
 		}
-	} else {
+		 popupDialogToFront();
+	} if ((style & maskModeless) != 0) {
+	   popupDialogToFront();
+  } else {
 		updateModal ();
 	}
 	showWithParent = visible;
@@ -2794,4 +2805,18 @@ Point getWindowOrigin () {
 	}
 	return super.getWindowOrigin( );
 }
+
+    /**
+     * Backporting fix for Eclipse bug 487786 / TFS 464274
+     * 
+     * When in full-screen mode, the OS will always consider it to be the top of the display stack unless it is a
+     * dialog. This fix will give modal windows dialog-type priority if the parent is in full-screen, allowing it to be
+     * popped up in front of the full-screen window.
+     */
+    private void popupDialogToFront() {
+        if (parent != null && parent.getShell().getFullScreen()) {
+            OS.gtk_window_set_type_hint(shellHandle, OS.GDK_WINDOW_TYPE_HINT_DIALOG);
+        }
+    }
+
 }

@@ -10,13 +10,34 @@
  *******************************************************************************/
 package org.eclipse.swt.browser;
 
-import org.eclipse.swt.*;
-import org.eclipse.swt.custom.*;
-import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.Bullet;
+import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.graphics.GlyphMetrics;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.internal.Compatibility;
-import org.eclipse.swt.internal.mozilla.*;
-import org.eclipse.swt.layout.*;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.internal.mozilla.IIDStore;
+import org.eclipse.swt.internal.mozilla.XPCOM;
+import org.eclipse.swt.internal.mozilla.nsICertificateDialogs;
+import org.eclipse.swt.internal.mozilla.nsIDOMWindow;
+import org.eclipse.swt.internal.mozilla.nsIServiceManager;
+import org.eclipse.swt.internal.mozilla.nsIX509Cert;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Dialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Monitor;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Widget;
 
 class PromptDialog extends Dialog {
 
@@ -358,7 +379,37 @@ class PromptDialog extends Dialog {
 		}
 	}
 
+	/**
+	 * Display dialog with a prompt for username and password. This method blocks untils user makes choice or closes the dialog.
+	 * @param title dialog title
+	 * @param text message text
+	 * @param check text to display near a checkbox (optional: if null, no checkbox will be shown)
+	 * @param user array with at least one element to receive username
+	 * @param pass array with at least one element to receive password
+	 * @param checkValue array with at least one element to receive checkbox value
+	 * @param result array with at least one element to receive user result (true - ok, false - cancel)
+	 */
 	void promptUsernameAndPassword(String title, String text, String check, final String[] user, final String[] pass, final boolean[] checkValue, final boolean[] result) {
+		Shell shell = promptUsernameAndPasswordAsync(title, text, check, user, pass, checkValue, result, () -> {});
+		Display display = shell.getDisplay();
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch()) display.sleep();
+		}
+	}
+
+	/**
+	 * Display dialog with a prompt for username and password. This method will return immediately, a callback will triggered when user makes choice or closes the dialog.
+	 * @param title dialog title
+	 * @param text message text
+	 * @param check text to display near a checkbox (optional: if null, no checkbox will be shown)
+	 * @param user array with at least one element to receive username
+	 * @param pass array with at least one element to receive password
+	 * @param checkValue array with at least one element to receive checkbox value
+	 * @param result array with at least one element to receive user result (true - ok, false - cancel)
+	 * @param callback runnable to be called when user completes the action.
+	 * @return dialog shell
+	 */
+	Shell promptUsernameAndPasswordAsync(String title, String text, String check, final String[] user, final String[] pass, final boolean[] checkValue, final boolean[] result, Runnable callback) {
 		Shell parent = getParent();
 		final Shell shell = new Shell(parent, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
 		shell.setText(title);
@@ -381,6 +432,7 @@ class PromptDialog extends Dialog {
 		final Text userText = new Text(shell, SWT.BORDER);
 		if (user[0] != null) userText.setText(user[0]);
 		data = new GridData();
+		data.widthHint = 400;
 		data.horizontalAlignment = GridData.FILL;
 		data.grabExcessHorizontalSpace = true;
 		userText.setLayoutData(data);
@@ -391,6 +443,7 @@ class PromptDialog extends Dialog {
 		final Text passwordText = new Text(shell, SWT.PASSWORD | SWT.BORDER);
 		if (pass[0] != null) passwordText.setText(pass[0]);
 		data = new GridData();
+		data.widthHint = 400;
 		data.horizontalAlignment = GridData.FILL;
 		data.grabExcessHorizontalSpace = true;
 		passwordText.setLayoutData(data);
@@ -430,10 +483,12 @@ class PromptDialog extends Dialog {
 
 		shell.setDefaultButton(buttons[1]);
 		shell.pack();
+		Point shellSize = shell.getSize();
+		Rectangle monitorBounds = monitor.getBounds();
+		shell.setLocation(monitorBounds.x + (monitorBounds.width  - shellSize.x) / 2,
+						  monitorBounds.y + (monitorBounds.height - shellSize.y) / 2);
 		shell.open();
-		Display display = parent.getDisplay();
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
-		}
+		shell.addDisposeListener(e -> callback.run());
+		return shell;
 	}
 }

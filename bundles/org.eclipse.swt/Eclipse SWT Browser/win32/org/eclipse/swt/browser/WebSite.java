@@ -563,14 +563,21 @@ int MapUrlToZone(long /*int*/ pwszUrl, long /*int*/ pdwZone, int dwFlags) {
 	* to follow local links.  The workaround is to return URLZONE_INTRANET
 	* instead of the default value URLZONE_LOCAL_MACHINE.
 	*/
-	IE ie = (IE)((Browser)getParent().getParent()).webBrowser;
 	/*
-	* For some reason IE8 invokes this function after the Browser has
-	* been disposed.  To detect this case check for ie.auto != null.
-	*/
-	if (ie.auto != null && ie.isAboutBlank && !ie.untrustedText) {
-		COM.MoveMemory(pdwZone, new int[] {IE.URLZONE_INTRANET}, 4);
-		return COM.S_OK;
+	 * Landmark issue
+	 * Bug 329228  - [Browser-IE] Callback happens on disposed control and generates an error
+     * https://bugs.eclipse.org/bugs/show_bug.cgi?id=329228
+	 */
+	if (!isDisposed()) {
+	    IE ie = (IE) ((Browser) getParent().getParent()).webBrowser;
+	    /*
+		* For some reason IE8 invokes this function after the Browser has
+		* been disposed.  To detect this case check for ie.auto != null.
+		*/
+		if (ie.auto != null && ie.isAboutBlank && !ie.untrustedText) {
+			COM.MoveMemory(pdwZone, new int[] { IE.URLZONE_INTRANET }, 4);
+			return COM.S_OK;
+		}
 	}
 	return IE.INET_E_DEFAULT_ACTION;
 }

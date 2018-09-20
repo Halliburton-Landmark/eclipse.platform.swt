@@ -4279,6 +4279,9 @@ int OnStateChange (long /*int*/ aWebProgress, long /*int*/ aRequest, int aStateF
 
 int OnProgressChange (long /*int*/ aWebProgress, long /*int*/ aRequest, int aCurSelfProgress, int aMaxSelfProgress, int aCurTotalProgress, int aMaxTotalProgress) {
 	if (progressListeners.length == 0) return XPCOM.NS_OK;
+	// Landmark issue
+	// Bug 445696:Receive DSR when closing Welcome Page tab before it finishes loading (Linux)
+	if (browser.isDisposed ()) return XPCOM.NS_OK;
 	ProgressEvent event = new ProgressEvent (browser);
 	event.display = browser.getDisplay ();
 	event.widget = browser;
