@@ -14,6 +14,9 @@
 package org.eclipse.swt.ole.win32;
 
 import java.io.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
@@ -609,9 +612,50 @@ protected IStorage createTempStorage() {
  */
 public void deactivateInPlaceClient() {
 	if (objIOleInPlaceObject != null) {
-		objIOleInPlaceObject.InPlaceDeactivate();
+		runWithDisabledEvents(objIOleInPlaceObject::InPlaceDeactivate);
 	}
 }
+
+/**
+ * Landmark defect 419748/391490: IOleInPlaceObject.InPlaceDeactivate() may trigger event processing. An SWT.Paint or SWT.Activate processing in the middle of recursive disposing can cause issues.
+ * We filter out the events, store them and post them back after the dispose procedure completes.
+ */
+private void runWithDisabledEvents(Runnable runnable) {
+    Map<Event, Integer> filteredEvents = new LinkedHashMap<>();
+    Listener filter = e -> {
+        filteredEvents.put(e, e.type);
+        e.type = SWT.None;
+    };
+    Display display = Display.getDefault();
+    try {
+        display.addFilter(SWT.Activate, filter);
+        display.addFilter(SWT.Deactivate, filter);
+        display.addFilter(SWT.Paint, filter);
+        runnable.run();
+    } finally {
+        display.removeFilter(SWT.Activate, filter);
+        display.removeFilter(SWT.Deactivate, filter);
+        display.removeFilter(SWT.Paint, filter);
+        // Restore events and post them back to display
+        display.asyncExec(() -> {
+            for (Entry<Event, Integer> entry : filteredEvents.entrySet()) {
+                Event event = entry.getKey();
+                event.type = entry.getValue();
+                if (event.widget != null && !event.widget.isDisposed()) {
+                    if (event.type == SWT.Paint) {
+                        // It's not safe to resend SWT.Paint (Event.gc might be null or disposed), so we just trigger redraw
+                        if (event.widget instanceof Control) {
+                            ((Control)event.widget).redraw();
+                        }
+                    } else {
+                        event.widget.notifyListeners(event.type, event);
+                    }
+                }
+            }
+        });
+    }
+}
+
 private void deleteTempStorage() {
 	//Destroy this item's contents in the temp root IStorage.
 	if (tempStorage != null){
@@ -959,15 +1003,21 @@ private void onDispose(Event e) {
 
 	if (state != STATE_NONE)
 		doVerb(OLE.OLEIVERB_DISCARDUNDOSTATE);
-	deactivateInPlaceClient();
-	releaseObjectInterfaces(); // Note, must release object interfaces before releasing frame
-	deleteTempStorage();
+	/*
+	 * Landmark issue Bug 451688:DSG session got extremely slow after
+	 * adding rasters to session, hung on exit/save. Postpone dispose
+	 * procedure as we did for mozilla browser
+	 */
+	getDisplay().asyncExec(()->{
+         deactivateInPlaceClient();
+         releaseObjectInterfaces(); // Note, must release object interfaces before releasing frame
+         deleteTempStorage();
+         frame.Release();
+         frame = null;
+	});
 
 	frame.removeListener(SWT.Resize, listener);
 	frame.removeListener(SWT.Move, listener);
-
-	frame.Release();
-	frame = null;
 }
 void onFocusIn(Event e) {
 	if (inDispose) return;
@@ -1003,10 +1053,12 @@ private int OnInPlaceDeactivate() {
 	if (objIOleInPlaceObject != null) objIOleInPlaceObject.Release();
 	objIOleInPlaceObject = null;
 	state = STATE_RUNNING;
-	redraw();
-	Shell shell = getShell();
-	if (isFocusControl() || frame.isFocusControl()) {
-		shell.traverse(SWT.TRAVERSE_TAB_NEXT);
+	if (!inDispose) {
+	   redraw();
+	   Shell shell = getShell();
+	   if (isFocusControl() || frame.isFocusControl()) {
+		  shell.traverse(SWT.TRAVERSE_TAB_NEXT);
+	   }
 	}
 	return COM.S_OK;
 }
