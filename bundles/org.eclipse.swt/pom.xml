@@ -18,7 +18,7 @@
   </parent>
   <groupId>org.eclipse.swt</groupId>
   <artifactId>org.eclipse.swt</artifactId>
-  <version>3.105.1-SNAPSHOT</version>
+  <version>3.105.1.lgc20181004-0600</version>
   <packaging>eclipse-plugin</packaging>
   <properties>
     <forceContextQualifier>v20160907-0248</forceContextQualifier>
