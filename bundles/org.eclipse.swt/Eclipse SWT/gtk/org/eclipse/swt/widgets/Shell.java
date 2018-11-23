@@ -2497,7 +2497,6 @@ public void setVisible (boolean visible) {
 		setLocationInPixels(oldX, oldY);
 	}
 	int mask = SWT.PRIMARY_MODAL | SWT.APPLICATION_MODAL | SWT.SYSTEM_MODAL;
-	int maskModeless = SWT.CLOSE | SWT.MODELESS| SWT.BORDER | SWT.TITLE;
 	if ((style & mask) != 0) {
 		if (visible) {
 			display.setModalShell (this);
@@ -2514,11 +2513,10 @@ public void setVisible (boolean visible) {
 		if (parent!=null && parent.getShell().getFullScreen()) {
 			GTK.gtk_window_set_type_hint(shellHandle, GDK.GDK_WINDOW_TYPE_HINT_DIALOG);
 		}
-		 popupDialogToFront();
-	} if ((style & maskModeless) != 0) {
-	   popupDialogToFront();
-  } else {
-		updateModal ();
+		popupDialogToFront(parent);
+	} else {
+		popupDialogToFront(parent);
+		updateModal();
 	}
 	showWithParent = visible;
 	if (GTK.gtk_widget_get_mapped (shellHandle) == visible) return;
@@ -3036,6 +3034,7 @@ Point getWindowOrigin () {
 	return super.getWindowOrigin( );
 }
 
+<<<<<<< dsg-4_10
 @Override
 Point getSurfaceOrigin () {
 	if (!mapped) {
@@ -3065,11 +3064,14 @@ static long /*int*/ GdkSeatGrabPrepareFunc (long /*int*/ gdkSeat, long /*int*/ g
  * dialog. This fix will give modal windows dialog-type priority if the parent is in full-screen, allowing it to be
  * popped up in front of the full-screen window.
  */
-private void popupDialogToFront() {
-    if (parent != null && parent.getShell().getFullScreen()) {
-        OS.gtk_window_set_type_hint(shellHandle, OS.GDK_WINDOW_TYPE_HINT_DIALOG);
+private void popupDialogToFront(Composite parent) {
+    if (parent != null) {
+        if (parent.getShell().getFullScreen()) {
+            OS.gtk_window_set_type_hint(shellHandle, OS.GDK_WINDOW_TYPE_HINT_DIALOG);
+        }
+        Composite anchestor = parent.getParent();
+        popupDialogToFront(anchestor);
     }
 }
-
 
 }
