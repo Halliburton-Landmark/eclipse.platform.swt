@@ -29,7 +29,7 @@
       
     <artifactId>org.eclipse.swt</artifactId>
       
-    <version>3.109.0.lgc20181113-0600</version>
+    <version>3.109.0.lgc20181126-0600</version>
       
     <packaging>eclipse-plugin</packaging>
       
