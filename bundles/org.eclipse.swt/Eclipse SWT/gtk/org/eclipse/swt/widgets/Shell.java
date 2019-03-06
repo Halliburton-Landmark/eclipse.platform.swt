@@ -3034,7 +3034,6 @@ Point getWindowOrigin () {
 	return super.getWindowOrigin( );
 }
 
-<<<<<<< dsg-4_10
 @Override
 Point getSurfaceOrigin () {
 	if (!mapped) {
