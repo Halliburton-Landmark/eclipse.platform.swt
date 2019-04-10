@@ -2619,7 +2619,9 @@ public void setVisible (boolean visible) {
 		if (parent!=null && parent.getShell().getFullScreen()) {
 			GTK.gtk_window_set_type_hint(shellHandle, GDK.GDK_WINDOW_TYPE_HINT_DIALOG);
 		}
+		popupDialogToFront(parent);
 	} else {
+		popupDialogToFront(parent);
 		updateModal ();
 	}
 	showWithParent = visible;
@@ -3191,5 +3193,22 @@ Point getSurfaceOrigin () {
 	}
 	return super.getSurfaceOrigin( );
 }
+
+/**
+ * Backporting fix for Eclipse bug 487786 / TFS 464274
+ * 
+ * When in full-screen mode, the OS will always consider it to be the top of the display stack unless it is a
+ * dialog. This fix will give modal windows dialog-type priority if the parent is in full-screen, allowing it to be
+ * popped up in front of the full-screen window.
+ */
+	private void popupDialogToFront(Composite parent) {
+		if (parent != null) {
+			if (parent.getShell().getFullScreen()) {
+				OS.gtk_window_set_type_hint(shellHandle, OS.GDK_WINDOW_TYPE_HINT_DIALOG);
+			}
+			Composite anchestor = parent.getParent();
+			popupDialogToFront(anchestor);
+		}
+	}
 
 }
