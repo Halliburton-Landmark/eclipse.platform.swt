@@ -15,13 +15,16 @@ Export-Package:
  org.eclipse.swt.dnd,
  org.eclipse.swt.events,
  org.eclipse.swt.graphics,
+ org.eclipse.swt.internal;x-friends:="org.eclipse.ui",
+ org.eclipse.swt.internal.image;x-friends:="org.eclipse.jface",
  org.eclipse.swt.layout,
  org.eclipse.swt.opengl,
  org.eclipse.swt.printing,
  org.eclipse.swt.program,
- org.eclipse.swt.widgets,
- org.eclipse.swt.internal; x-friends:="org.eclipse.ui",
- org.eclipse.swt.internal.image; x-internal:=true
+ org.eclipse.swt.widgets
 Eclipse-ExtensibleAPI: true
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: org.eclipse.swt
+Bundle-ClassPath: batik/batik-all-1.10.jar,
+ batik/xml-apis-ext-1.3.04.jar,
+ batik/xmlgraphics-commons-2.3.jar
