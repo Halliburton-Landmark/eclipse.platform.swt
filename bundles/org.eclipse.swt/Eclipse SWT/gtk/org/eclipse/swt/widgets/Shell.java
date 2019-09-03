@@ -1873,9 +1873,14 @@ long /*int*/ gtk_window_state_event (long /*int*/ widget, long /*int*/ event) {
 public void open () {
 	checkWidget ();
 	bringToTop (false);
-	if (Shell.class.isInstance(getParent()) && !getParent().isVisible()) {
-		Shell.class.cast(getParent()).open();
-	}
+
+//	commented out changes added by:
+//	https://bugs.eclipse.org/bugs/show_bug.cgi?id=462637
+//	this causes any call to new Shell(new Shell()) to open additional empty shell.
+//	see 338690 and 338705
+//	if (Shell.class.isInstance(getParent()) && !getParent().isVisible()) {
+//		Shell.class.cast(getParent()).open();
+//	}
 	setVisible (true);
 	if (isDisposed ()) return;
 	/*
