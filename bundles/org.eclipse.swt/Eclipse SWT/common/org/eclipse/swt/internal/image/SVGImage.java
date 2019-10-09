@@ -1,35 +1,17 @@
 package org.eclipse.swt.internal.image;
 
-import java.awt.AlphaComposite;
-import java.awt.Composite;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
-import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.awt.*;
+import java.awt.image.*;
+import java.io.*;
+import java.net.*;
+import java.util.*;
 
-import org.apache.batik.anim.dom.SAXSVGDocumentFactory;
-import org.apache.batik.bridge.BridgeContext;
-import org.apache.batik.bridge.DocumentLoader;
-import org.apache.batik.bridge.GVTBuilder;
-import org.apache.batik.bridge.UserAgent;
-import org.apache.batik.bridge.UserAgentAdapter;
-import org.apache.batik.transcoder.TranscoderException;
-import org.apache.batik.transcoder.TranscoderInput;
-import org.apache.batik.transcoder.TranscoderOutput;
-import org.apache.batik.transcoder.TranscodingHints;
-import org.apache.batik.transcoder.image.ImageTranscoder;
-import org.apache.batik.util.SVGConstants;
-import org.apache.batik.util.XMLResourceDescriptor;
-import org.w3c.dom.svg.SVGDocument;
+import org.apache.batik.anim.dom.*;
+import org.apache.batik.bridge.*;
+import org.apache.batik.transcoder.*;
+import org.apache.batik.transcoder.image.*;
+import org.apache.batik.util.*;
+import org.w3c.dom.svg.*;
 
 public class SVGImage extends BufferedImage {
     private static class BufferedImageTranscoder extends ImageTranscoder {
@@ -191,16 +173,6 @@ public class SVGImage extends BufferedImage {
         hints.put(ImageTranscoder.KEY_DOM_IMPLEMENTATION, svg.getImplementation());
         hints.put(ImageTranscoder.KEY_DOCUMENT_ELEMENT_NAMESPACE_URI, SVGConstants.SVG_NAMESPACE_URI);
         hints.put(ImageTranscoder.KEY_DOCUMENT_ELEMENT, "svg");
-        /*
-        String css = scaleQuality.get(scalingHint);
-        File cssFile = null;
-        if (css != null) {
-            cssFile = createCSS(css);
-            if (cssFile != null) {
-                hints.put(ImageTranscoder.KEY_USER_STYLESHEET_URI, cssFile.toURI().toString());
-            }
-        }
-        */
         transcoder.setTranscodingHints(hints);
         transcoder.setImage(this);
         // This may be a re-render, if the scaling quality hint has changed.
@@ -215,9 +187,6 @@ public class SVGImage extends BufferedImage {
             te.printStackTrace();
         } finally {
             gfx.setComposite(savedComposite);
-//            if (cssFile != null) {
-//                cssFile.delete();
-//            }
         }
     }
 
