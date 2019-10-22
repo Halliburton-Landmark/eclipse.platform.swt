@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-Name: %pluginName
 Bundle-Vendor: %providerName
 Bundle-SymbolicName: org.eclipse.swt; singleton:=true
-Bundle-Version: 3.110.0.lgc20190903-0700
+Bundle-Version: 3.110.0.lgc20191007-1709
 Bundle-ManifestVersion: 2
 Bundle-Localization: plugin
 DynamicImport-Package: org.eclipse.swt.accessibility2
@@ -25,3 +25,6 @@ Export-Package:
 Eclipse-ExtensibleAPI: true
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: org.eclipse.swt
+Bundle-ClassPath: batik/batik-all-1.10.jar,
+ batik/xml-apis-ext-1.3.04.jar,
+ batik/xmlgraphics-commons-2.3.jar
