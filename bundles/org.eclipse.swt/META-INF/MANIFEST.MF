@@ -21,7 +21,7 @@ Export-Package:
  org.eclipse.swt.program,
  org.eclipse.swt.widgets,
  org.eclipse.swt.internal; x-friends:="org.eclipse.ui",
- org.eclipse.swt.internal.image; x-internal:=true
+ org.eclipse.swt.internal.image; x-friends:="org.eclipse.jface"
 Eclipse-ExtensibleAPI: true
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: org.eclipse.swt
