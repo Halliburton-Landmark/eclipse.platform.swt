@@ -60,16 +60,7 @@ public class SVGFileFormat extends FileFormat {
 
     public static ImageData loadImageData(URL url, int size) {
         try {
-            PNGTranscoder t = new PNGTranscoder();
-            t.addTranscodingHint(SVGAbstractTranscoder.KEY_WIDTH, (float)size);
-            t.addTranscodingHint(SVGAbstractTranscoder.KEY_HEIGHT, (float)size);
-            TranscoderInput input = new TranscoderInput(url.openStream());
-            ByteArrayOutputStream ostream = new ByteArrayOutputStream();
-            TranscoderOutput output = new TranscoderOutput(ostream);
-            t.transcode(input, output);
-            ostream.flush();
-            ImageData imageData = new ImageData(new ByteArrayInputStream(ostream.toByteArray()));
-            return imageData;
+            return new ImageData(new ByteArrayInputStream(SVGHelper.loadSvg(url, size)));
         } catch (Exception e) {
             Logger.getLogger(SVGFileFormat.class.getName()).severe("SVG EXCEPTION: " + url.getFile() + " " + e);
             return new ImageData(8, 8, 24, new PaletteData());
