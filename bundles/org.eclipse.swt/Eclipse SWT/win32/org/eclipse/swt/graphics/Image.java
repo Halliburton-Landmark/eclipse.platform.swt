@@ -504,6 +504,44 @@ public Image(Device device, ImageData data) {
 }
 
 /**
+ * Constructs an instance of this class from the given
+ * <code>ImageData</code>. Was implemented for using with already scaled <code>ImageData</code> from SVG files.
+ * <p>
+ * You can use it when you need to create <code>Image</code> from <code>ImageData</code> without auto scaling.
+ * You must dispose the image when it is no longer required.
+ * </p>
+ *
+ * @param device the device on which to create the image
+ * @param data the image data to create the image from (must not be null)
+ * @param withZoom if true the constructor is equal to Image(Device device, ImageData data),
+ *        if false then data = DPIUtil.autoScaleUp (device, data) will be skipped
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_NULL_ARGUMENT - if device is null and there is no current device</li>
+ *    <li>ERROR_NULL_ARGUMENT - if the image data is null</li>
+ * </ul>
+ * @exception SWTException <ul>
+ *    <li>ERROR_UNSUPPORTED_DEPTH - if the depth of the ImageData is not supported</li>
+ * </ul>
+ * @exception SWTError <ul>
+ *    <li>ERROR_NO_HANDLES if a handle could not be obtained for image creation</li>
+ * </ul>
+ *
+ * @see #dispose()
+ */
+    public Image(Device device, ImageData data, boolean withZoom) {
+        super(device);
+        if (data == null)
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        currentDeviceZoom = DPIUtil.getDeviceZoom();
+        if (withZoom) {
+            data = DPIUtil.autoScaleUp(device, data);
+        }
+        init(data);
+        init();
+    }
+
+/**
  * Constructs an instance of this class, whose type is
  * <code>SWT.ICON</code>, from the two given <code>ImageData</code>
  * objects. The two images must be the same size. Pixel transparency
