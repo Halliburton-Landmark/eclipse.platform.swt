@@ -302,7 +302,7 @@ public static Shell new_Shell (final Display display, final Canvas parent) {
 			display.syncExec (() -> {
 				if (shell.isDisposed()) return;
 				Dimension dim = parent.getSize ();
-				shell.setSize(DPIUtil.autoScaleDown(new Point(dim.width, dim.height))); // To Points
+				shell.setSize(new Point(dim.width, dim.height)); // To Points
 			});
 		}
 	};
