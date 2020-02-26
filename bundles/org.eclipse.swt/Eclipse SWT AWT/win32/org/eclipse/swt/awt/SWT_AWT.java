@@ -258,7 +258,7 @@ public static Frame new_Frame (final Composite parent) {
 
 	parent.getDisplay().asyncExec(() -> {
 		if (parent.isDisposed()) return;
-		final Rectangle clientArea = DPIUtil.autoScaleUp(parent.getClientArea()); // To Pixels
+		final Rectangle clientArea = parent.getClientArea(); // To Pixels
 		EventQueue.invokeLater(() -> {
 			frame.setSize (clientArea.width, clientArea.height);
 			frame.validate ();
@@ -302,7 +302,7 @@ public static Shell new_Shell (final Display display, final Canvas parent) {
 			display.syncExec (() -> {
 				if (shell.isDisposed()) return;
 				Dimension dim = parent.getSize ();
-				shell.setSize(DPIUtil.autoScaleDown(new Point(dim.width, dim.height))); // To Points
+				shell.setSize(new Point(dim.width, dim.height)); // To Points
 			});
 		}
 	};

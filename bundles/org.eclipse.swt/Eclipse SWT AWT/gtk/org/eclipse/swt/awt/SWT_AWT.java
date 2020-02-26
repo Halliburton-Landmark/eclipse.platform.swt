@@ -221,7 +221,7 @@ public static Frame new_Frame (final Composite parent) {
 				});
 				break;
 			case SWT.Resize:
-				final Rectangle clientArea = DPIUtil.autoScaleUp(parent.getClientArea());
+				final Rectangle clientArea = parent.getClientArea();
 				EventQueue.invokeLater(() -> frame[0].setSize (clientArea.width, clientArea.height));
 				break;
 		}
@@ -231,7 +231,7 @@ public static Frame new_Frame (final Composite parent) {
 
 	parent.getDisplay().asyncExec(() -> {
 		if (parent.isDisposed()) return;
-		final Rectangle clientArea = DPIUtil.autoScaleUp(parent.getClientArea());
+		final Rectangle clientArea = parent.getClientArea();
 		EventQueue.invokeLater(() -> {
 			frame[0].setSize (clientArea.width, clientArea.height);
 			frame[0].validate ();
