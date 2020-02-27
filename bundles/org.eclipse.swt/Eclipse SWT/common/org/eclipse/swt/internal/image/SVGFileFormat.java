@@ -59,12 +59,15 @@ public class SVGFileFormat extends FileFormat {
     }
 
     public static ImageData loadImageData(URL url, int size) {
+        return loadImageData(url, size, size);
+    }
+
+    public static ImageData loadImageData(URL url, int width, int height) {
         try {
-            return new ImageData(new ByteArrayInputStream(SVGHelper.loadSvg(url, size)));
+            return new ImageData(new ByteArrayInputStream(SVGHelper.loadSvg(url, width, height)));
         } catch (Exception e) {
             Logger.getLogger(SVGFileFormat.class.getName()).severe("SVG EXCEPTION: " + url.getFile() + " " + e);
             return new ImageData(8, 8, 24, new PaletteData());
         }
     }
-
 }
