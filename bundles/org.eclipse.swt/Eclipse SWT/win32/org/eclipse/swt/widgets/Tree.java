@@ -782,7 +782,7 @@ LRESULT CDDS_ITEMPOSTPAINT (NMTVCUSTOMDRAW nmcd, long /*int*/ wParam, long /*int
 							OS.SelectClipRgn (hDC, 0);
 							gc.dispose ();
 						}
-						OS.SetRect (rect, rect.left + size.x + offset, rect.top, rect.right - inset, rect.bottom);
+						OS.SetRect (rect, rect.left + DPIUtil.autoScaleUp(size.x) + offset, rect.top, rect.right - inset, rect.bottom);
 					} else {
 						if (i == 0) {
 							if (OS.SendMessage (handle, OS.TVM_GETIMAGELIST, OS.TVSIL_NORMAL, 0) != 0) {
