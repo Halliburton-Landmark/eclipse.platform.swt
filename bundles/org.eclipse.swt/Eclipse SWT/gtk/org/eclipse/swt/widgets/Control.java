@@ -5177,6 +5177,7 @@ void setCursor (long /*int*/ cursor) {
 		long /*int*/ window = eventWindow ();
 		if (window != 0) {
 			GDK.gdk_window_set_cursor (window, cursor);
+			update();
 		}
 	}
 }
