@@ -204,6 +204,10 @@ public void remove (Image image) {
 	}
 }
 
+public void replacePixbuf (int index, long pixbuf) {
+    pixbufs[index] = pixbuf;
+}
+
 void set (int index, Image image) {
 	long /*int*/ pixbuf = createPixbuf (image);
 	int w = GDK.gdk_pixbuf_get_width(pixbuf);
