@@ -957,7 +957,12 @@ void createRenderers (long /*int*/ columnHandle, int modelIndex, boolean check, 
 	 * no images. Fix for Bug 469277 & 476419. NOTE: this change has been ported to Tables since Tables/Trees both
 	 * use the same underlying GTK structure.
 	 */
-	GTK.gtk_tree_view_column_add_attribute (columnHandle, pixbufRenderer, OS.pixbuf, modelIndex + CELL_PIXBUF);
+	// commented to fix blurred icons in HiDPI mode
+    // should be uncommented when we will have proper fix
+    // for Bug 562468 & 534422
+	//GTK.gtk_tree_view_column_add_attribute (columnHandle, pixbufRenderer, OS.pixbuf, modelIndex + CELL_PIXBUF);
+	GTK.gtk_tree_view_column_add_attribute (columnHandle, pixbufRenderer, OS.gicon, modelIndex + CELL_PIXBUF);
+
 	if (!ownerDraw) {
 		GTK.gtk_tree_view_column_add_attribute (columnHandle, pixbufRenderer, OS.cell_background_rgba, BACKGROUND_COLUMN);
 		GTK.gtk_tree_view_column_add_attribute (columnHandle, textRenderer, OS.cell_background_rgba, BACKGROUND_COLUMN);
