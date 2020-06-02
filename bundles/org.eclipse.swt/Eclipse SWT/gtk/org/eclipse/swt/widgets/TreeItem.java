@@ -1504,6 +1504,12 @@ public void setImage (int index, Image image) {
 		if (imageIndex == -1) {
             imageIndex = imageList.add (image);
             pixbuf = imageList.getPixbuf (imageIndex);
+
+
+            // commented to fix blurred icons in HiDPI mode
+            // should be uncommented when we will have proper fix
+            // for Bug 562468 & 534422
+
             /*
              * Reset size of pixbufRenderer if we have an image being set that is larger
              * than the current size of the pixbufRenderer. Fix for Bug 469277 & 476419.
@@ -1514,7 +1520,7 @@ public void setImage (int index, Image image) {
              * change has been ported to Tables since Tables/Trees both use the same
              * underlying GTK structure.
              */
-            if (DPIUtil.useCairoAutoScale()) {
+            //if (DPIUtil.useCairoAutoScale()) {
                 /*
                  * Bug in GTK the default renderer does scale again on pixbuf.
                  * Need to scaledown here and no need to scaledown id device scale is 1
@@ -1523,6 +1529,7 @@ public void setImage (int index, Image image) {
                  * the image is added to the imagelist in this call. If the image is already
                  * add imageList.getPixbuf returns resized pixbuf.
                  */
+                /*
                 if ((DPIUtil.getDeviceZoom() != 100)) {
                     Rectangle imgSize = image.getBounds();
                     long scaledPixbuf = GDK.gdk_pixbuf_scale_simple(pixbuf, imgSize.width, imgSize.height, GDK.GDK_INTERP_BILINEAR);
@@ -1531,7 +1538,8 @@ public void setImage (int index, Image image) {
                     }
                     imageList.replacePixbuf(imageIndex, pixbuf);
                 }
-            }
+                */
+            //}
         } else {
             pixbuf = imageList.getPixbuf (imageIndex);
         }
