@@ -2128,31 +2128,40 @@ int setBounds (int x, int y, int width, int height, boolean move, boolean resize
 	}
 	int result = 0;
 	if (move) {
-		int [] x_pos = new int [1], y_pos = new int [1];
-		GTK.gtk_window_get_position (shellHandle, x_pos, y_pos);
-		GTK.gtk_window_move (shellHandle, x, y);
-		/*
-		 * Bug in GTK: gtk_window_get_position () is not always up-to-date right after
-		 * gtk_window_move (). The random delays cause problems like bug 445900.
-		 *
-		 * The workaround is to wait for the position change to be processed.
-		 * The limit 1000 is an experimental value. I've seen cases where about 200
-		 * iterations were necessary.
-		 */
-		for (int i = 0; i < 1000; i++) {
-			int [] x2_pos = new int [1], y2_pos = new int [1];
-			GTK.gtk_window_get_position (shellHandle, x2_pos, y2_pos);
-			if (x2_pos[0] == x && y2_pos[0] == y) {
-				break;
+		int[] x_pos = new int[1], y_pos = new int[1];
+		GTK.gtk_window_get_position(shellHandle, x_pos, y_pos);
+		if (x_pos[0] != x || y_pos[0] != y) {
+			GTK.gtk_window_move(shellHandle, x, y);
+			/*
+			 * Bug in GTK: gtk_window_get_position () is not always up-to-date
+			 * right after gtk_window_move (). The random delays cause problems
+			 * like bug 445900.
+			 *
+			 * The workaround is to wait for the position change to be
+			 * processed. The limit 1000 is an experimental value. I've seen
+			 * cases where about 200 iterations were necessary.
+			 */
+			for (int i = 0; i < 1000; i++) {
+				int[] x2_pos = new int[1], y2_pos = new int[1];
+				GTK.gtk_window_get_position(shellHandle, x2_pos, y2_pos);
+				if (x2_pos[0] == x && y2_pos[0] == y) {
+					break;
+				}
 			}
-		}
-		if (x_pos [0] != x || y_pos [0] != y) {
-			moved = true;
+			if (x_pos[0] != x || y_pos[0] != y) {
+				moved = true;
+				oldX = x;
+				oldY = y;
+				sendEvent(SWT.Move);
+				if (isDisposed())
+					return 0;
+				result |= MOVED;
+			}
+		} else {
+			// update values even if the shell position hasn't been changed
+			// this prevent unexpected shell location in scaled mode
 			oldX = x;
 			oldY = y;
-			sendEvent (SWT.Move);
-			if (isDisposed ()) return 0;
-			result |= MOVED;
 		}
 	}
 	if (resize) {
@@ -2732,6 +2741,7 @@ public void setVisible (boolean visible) {
 		}
 		opened = true;
 		if (!moved) {
+		    System.err.println("====");
 			moved = true;
 			Point location = getLocationInPixels();
 			oldX = location.x;
@@ -3201,7 +3211,7 @@ Point getSurfaceOrigin () {
 
 /**
  * Backporting fix for Eclipse bug 487786 / TFS 464274
- * 
+ *
  * When in full-screen mode, the OS will always consider it to be the top of the display stack unless it is a
  * dialog. This fix will give modal windows dialog-type priority if the parent is in full-screen, allowing it to be
  * popped up in front of the full-screen window.
