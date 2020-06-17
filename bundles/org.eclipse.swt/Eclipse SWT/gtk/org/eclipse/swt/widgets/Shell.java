@@ -2741,7 +2741,6 @@ public void setVisible (boolean visible) {
 		}
 		opened = true;
 		if (!moved) {
-		    System.err.println("====");
 			moved = true;
 			Point location = getLocationInPixels();
 			oldX = location.x;
