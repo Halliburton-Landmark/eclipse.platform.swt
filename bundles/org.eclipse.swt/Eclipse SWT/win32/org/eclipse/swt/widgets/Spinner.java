@@ -15,9 +15,10 @@ package org.eclipse.swt.widgets;
 
 
 import org.eclipse.swt.*;
-import org.eclipse.swt.internal.win32.*;
-import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.*;
+import org.eclipse.swt.internal.win32.*;
 
 /**
  * Instances of this class are selectable user interface
@@ -992,12 +993,26 @@ void setSelection (int value, boolean setPos, boolean setText, boolean notify) {
 			string = verifyText (string, 0, length, null);
 			if (string == null) return;
 		}
-		TCHAR buffer = new TCHAR (getCodePage (), string, true);
-		OS.SetWindowText (hwndText, buffer);
-		OS.SendMessage (hwndText, OS.EM_SETSEL, 0, -1);
-		OS.NotifyWinEvent (OS.EVENT_OBJECT_FOCUS, hwndText, OS.OBJID_CLIENT, 0);
+		setWindowText(string, notify);
+	} else {
+	    if (notify) sendSelectionEvent (SWT.Selection);
 	}
-	if (notify) sendSelectionEvent (SWT.Selection);
+}
+
+private void setWindowText(String string, boolean notify) {
+    TCHAR buffer = new TCHAR (getCodePage (), string, true);
+    Runnable runnable = () -> {
+        OS.SetWindowText (hwndText, buffer);
+        OS.SendMessage (hwndText, OS.EM_SETSEL, 0, -1);
+        OS.NotifyWinEvent (OS.EVENT_OBJECT_FOCUS, hwndText, OS.OBJID_CLIENT, 0);
+        if (notify) sendSelectionEvent (SWT.Selection);
+    };
+    // Only on Windows, only with HiDPI we need to defer a call of OS.SetWindowText (hwndText, buffer);
+    if (DPIUtil.getDeviceZoom() > 150 && buffer.length() > 8) {
+        getDisplay().asyncExec(runnable);
+    } else {
+        runnable.run();
+    }
 }
 
 /**
