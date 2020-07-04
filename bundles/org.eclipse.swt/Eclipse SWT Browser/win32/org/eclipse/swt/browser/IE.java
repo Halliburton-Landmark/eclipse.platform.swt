@@ -954,6 +954,7 @@ public void create(Composite parent, int style) {
 					if (arg13.getType() == OLE.VT_BSTR) {
 						String text = arg13.getString();
 						StatusTextEvent newEvent5 = new StatusTextEvent(browser);
+						if (browser.isDisposed()) return;
 						newEvent5.display = browser.getDisplay();
 						newEvent5.widget = browser;
 						newEvent5.text = text;
