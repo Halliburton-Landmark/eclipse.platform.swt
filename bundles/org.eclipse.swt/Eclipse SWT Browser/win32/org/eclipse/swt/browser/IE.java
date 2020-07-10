@@ -454,7 +454,7 @@ public void create(Composite parent, int style) {
 
 	OleListener oleListener = event -> {
 		/* callbacks are asynchronous, auto could be disposed */
-		if (auto != null) {
+		if (auto != null && !browser.isDisposed()) {
 			switch (event.type) {
 				case BeforeNavigate2: {
 
