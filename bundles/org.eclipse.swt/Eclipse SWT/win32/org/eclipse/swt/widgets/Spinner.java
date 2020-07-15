@@ -1008,7 +1008,7 @@ private void setWindowText(String string, boolean notify) {
         if (notify) sendSelectionEvent (SWT.Selection);
     };
     // Only on Windows, only with HiDPI we need to defer a call of OS.SetWindowText(hwndText, buffer);
-    if (DPIUtil.getDeviceZoom() > 150 && buffer.length() > 8) {
+    if (DPIUtil.getDeviceZoom() > 150 && buffer.length() > 5) {
         getDisplay().asyncExec(runnable);
     } else {
         runnable.run();
