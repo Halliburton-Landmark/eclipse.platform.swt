@@ -2562,6 +2562,8 @@ void onDispose (Event e) {
 		if (!browser.isClosing) {
 			close (false);
 		}
+	} else {
+		return;
 	}
 
 	for (BrowserFunction function : functions.values()) {
