@@ -52,7 +52,6 @@ import org.eclipse.swt.widgets.*;
 public class OleClientSite extends Composite {
 
 	// Interfaces for this Ole Client Container
-	private COMObject  iUnknown;
 	COMObject  iOleClientSite;
 	private COMObject  iAdviseSink;
 	private COMObject  iOleInPlaceSite;
@@ -504,16 +503,6 @@ private int ContextSensitiveHelp(int fEnterMode) {
 	return COM.S_OK;
 }
 protected void createCOMInterfaces() {
-
-	iUnknown = new COMObject(new int[]{2, 0, 0}){
-		@Override
-		public long method0(long[] args) {return QueryInterface(args[0], args[1]);}
-		@Override
-		public long method1(long[] args) {return AddRef();}
-		@Override
-		public long method2(long[] args) {return Release();}
-	};
-
 	iOleClientSite = new COMObject(new int[]{2, 0, 0, 0, 3, 1, 0, 1, 0}){
 		@Override
 		public long method0(long[] args) {return QueryInterface(args[0], args[1]);}
@@ -663,12 +652,8 @@ private void deleteTempStorage() {
 	tempStorage = null;
 }
 protected void disposeCOMInterfaces() {
-	if (iUnknown != null)
-		iUnknown.dispose();
-	iUnknown = null;
-
 	if (iOleClientSite != null)
-	iOleClientSite.dispose();
+	    iOleClientSite.dispose();
 	iOleClientSite = null;
 
 	if (iAdviseSink != null)
@@ -1143,18 +1128,13 @@ protected int QueryInterface(long riid, long ppvObject) {
 	GUID guid = new GUID();
 	COM.MoveMemory(guid, riid, GUID.sizeof);
 
-	if (COM.IsEqualGUID(guid, COM.IIDIUnknown)) {
-		OS.MoveMemory(ppvObject, new long[] {iUnknown.getAddress()}, C.PTR_SIZEOF);
+	if (COM.IsEqualGUID(guid, COM.IIDIUnknown) || COM.IsEqualGUID(guid, COM.IIDIOleClientSite)) {
+	    OS.MoveMemory(ppvObject, new long[] {iOleClientSite.getAddress()}, C.PTR_SIZEOF);
 		AddRef();
 		return COM.S_OK;
 	}
 	if (COM.IsEqualGUID(guid, COM.IIDIAdviseSink)) {
 		OS.MoveMemory(ppvObject, new long[] {iAdviseSink.getAddress()}, C.PTR_SIZEOF);
-		AddRef();
-		return COM.S_OK;
-	}
-	if (COM.IsEqualGUID(guid, COM.IIDIOleClientSite)) {
-		OS.MoveMemory(ppvObject, new long[] {iOleClientSite.getAddress()}, C.PTR_SIZEOF);
 		AddRef();
 		return COM.S_OK;
 	}

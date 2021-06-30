@@ -322,16 +322,6 @@ private int ContextSensitiveHelp(int fEnterMode) {
 	return COM.S_OK;
 }
 private void createCOMInterfaces() {
-	// Create each of the interfaces that this object implements
-	iUnknown = new COMObject(new int[]{2, 0, 0}){
-		@Override
-		public long method0(long[] args) {return QueryInterface(args[0], args[1]);}
-		@Override
-		public long method1(long[] args) {return AddRef();}
-		@Override
-		public long method2(long[] args) {return Release();}
-	};
-
 	iOleInPlaceFrame = new COMObject(new int[]{2, 0, 0, 1, 1, 1, 1, 1, 2, 2, 3, 1, 1, 1, 2}){
 		@Override
 		public long method0(long[] args) {return QueryInterface(args[0], args[1]);}
@@ -364,12 +354,7 @@ private void createCOMInterfaces() {
 	};
 }
 private void disposeCOMInterfaces () {
-
-	if (iUnknown != null)
-		iUnknown.dispose();
-	iUnknown = null;
-
-	if (iOleInPlaceFrame != null)
+    if (iOleInPlaceFrame != null)
 		iOleInPlaceFrame.dispose();
 	iOleInPlaceFrame = null;
 }
