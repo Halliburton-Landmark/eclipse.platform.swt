@@ -15,9 +15,9 @@
 package org.eclipse.swt.widgets;
 
 
-import org.eclipse.swt.internal.win32.*;
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.win32.*;
 
 /**
  * Instances of this class represent a task item.
@@ -293,8 +293,8 @@ public void setOverlayImage (Image overlayImage) {
 		if (overlayText.length () != 0) {
 			updateText ();
 		} else {
-			long /*int*/ mTaskbarList3 = parent.mTaskbarList3;
-			long /*int*/ hwnd = shell.handle;
+			long mTaskbarList3 = parent.mTaskbarList3;
+			long hwnd = shell.handle;
 			/* ITaskbarList3::SetOverlayIcon */
 			OS.VtblCall (18, mTaskbarList3, hwnd, 0, 0);
 		}
@@ -338,8 +338,8 @@ public void setOverlayText (String overlayText) {
 		if (overlayImage != null) {
 			updateImage ();
 		} else {
-			long /*int*/ mTaskbarList3 = parent.mTaskbarList3;
-			long /*int*/ hwnd = shell.handle;
+			long mTaskbarList3 = parent.mTaskbarList3;
+			long hwnd = shell.handle;
 			/* ITaskbarList3::SetOverlayIcon */
 			OS.VtblCall (18, mTaskbarList3, hwnd, 0, 0);
 		}
@@ -425,19 +425,16 @@ public void setProgressState (int progressState) {
 
 void setShell (Shell shell) {
 	this.shell = shell;
-	shell.addListener (SWT.Dispose, new Listener () {
-		@Override
-		public void handleEvent (Event event) {
-			if (isDisposed ()) return;
-			dispose ();
-		}
-	});
+	shell.addListener (SWT.Dispose, event -> {
+    	if (isDisposed ()) return;
+    	dispose ();
+    });
 }
 
 void updateImage () {
 	showingText = false;
 	Image image2 = null;
-	long /*int*/ hIcon = 0;
+	long hIcon = 0;
 	switch (overlayImage.type) {
 		case SWT.BITMAP:
 			image2 = Display.createIcon (overlayImage);
@@ -447,8 +444,8 @@ void updateImage () {
 			hIcon = overlayImage.handle;
 			break;
 	}
-	long /*int*/ mTaskbarList3 = parent.mTaskbarList3;
-	long /*int*/ hwnd = shell.handle;
+	long mTaskbarList3 = parent.mTaskbarList3;
+	long hwnd = shell.handle;
 	/* ITaskbarList3::SetOverlayIcon */
 	OS.VtblCall (18, mTaskbarList3, hwnd, hIcon, 0);
 	if (image2 != null) image2.dispose ();
@@ -457,8 +454,8 @@ void updateImage () {
 void updateProgress () {
 	if (progressState == SWT.INDETERMINATE) return;
 	if (progressState == SWT.DEFAULT) return;
-	long /*int*/ mTaskbarList3 = parent.mTaskbarList3;
-	long /*int*/ hwnd = shell.handle;
+	long mTaskbarList3 = parent.mTaskbarList3;
+	long hwnd = shell.handle;
 	/* ITaskbarList3::SetProgressValue */
 	OS.VtblCall (9, mTaskbarList3, hwnd, (long)progress, (long)PROGRESS_MAX);
 }
@@ -471,8 +468,8 @@ void updateProgressState () {
 		case SWT.PAUSED: tbpFlags = OS.TBPF_PAUSED; break;
 		case SWT.INDETERMINATE: tbpFlags = OS.TBPF_INDETERMINATE; break;
 	}
-	long /*int*/ mTaskbarList3 = parent.mTaskbarList3;
-	long /*int*/ hwnd = shell.handle;
+	long mTaskbarList3 = parent.mTaskbarList3;
+	long hwnd = shell.handle;
 	/* ITaskbarList3::SetProgressValue */
 	OS.VtblCall (9, mTaskbarList3, hwnd, (long)progress, (long)PROGRESS_MAX);
 	/* ITaskbarList3::SetProgressState */
@@ -483,7 +480,7 @@ void updateText () {
 	showingText = true;
 	/* Create resources */
 	int width = 16, height = 16;
-	long /*int*/ hdc = OS.GetDC (0);
+	long hdc = OS.GetDC (0);
 	BITMAPINFOHEADER bmiHeader = new BITMAPINFOHEADER ();
 	bmiHeader.biSize = BITMAPINFOHEADER.sizeof;
 	bmiHeader.biWidth = width;
@@ -493,23 +490,23 @@ void updateText () {
 	bmiHeader.biCompression = OS.BI_RGB;
 	byte []	bmi = new byte [BITMAPINFOHEADER.sizeof];
 	OS.MoveMemory (bmi, bmiHeader, BITMAPINFOHEADER.sizeof);
-	long /*int*/ [] pBits = new long /*int*/ [1];
-	long /*int*/ hBitmap = OS.CreateDIBSection (0, bmi, OS.DIB_RGB_COLORS, pBits, 0, 0);
+	long [] pBits = new long [1];
+	long hBitmap = OS.CreateDIBSection (0, bmi, OS.DIB_RGB_COLORS, pBits, 0, 0);
 	if (hBitmap == 0) error (SWT.ERROR_NO_HANDLES);
-	long /*int*/ dstHdc = OS.CreateCompatibleDC (hdc);
-	long /*int*/ oldBitmap = OS.SelectObject (dstHdc, hBitmap);
-	long /*int*/ hMask = OS.CreateBitmap (width, height, 1, 1, null);
+	long dstHdc = OS.CreateCompatibleDC (hdc);
+	long oldBitmap = OS.SelectObject (dstHdc, hBitmap);
+	long hMask = OS.CreateBitmap (width, height, 1, 1, null);
 	if (hMask == 0) error (SWT.ERROR_NO_HANDLES);
-	long /*int*/ maskHdc = OS.CreateCompatibleDC (hdc);
-	long /*int*/ oldMask = OS.SelectObject (maskHdc, hMask);
+	long maskHdc = OS.CreateCompatibleDC (hdc);
+	long oldMask = OS.SelectObject (maskHdc, hMask);
 
 	/* Draw content */
 	OS.PatBlt (maskHdc, 0, 0, width, height, OS.WHITENESS);
-	long /*int*/ oldBrush = OS.SelectObject (maskHdc, OS.GetStockObject (OS.BLACK_BRUSH));
+	long oldBrush = OS.SelectObject (maskHdc, OS.GetStockObject (OS.BLACK_BRUSH));
 	OS.RoundRect (maskHdc, 0, 0, width, height, 8, 8);
 	OS.SelectObject (maskHdc, oldBrush);
 
-	long /*int*/ brush = OS.CreateSolidBrush (OS.GetSysColor (OS.COLOR_HIGHLIGHT));
+	long brush = OS.CreateSolidBrush (OS.GetSysColor (OS.COLOR_HIGHLIGHT));
 	oldBrush = OS.SelectObject (dstHdc, brush);
 	OS.RoundRect (dstHdc, 0, 0, width, height, 8, 8);
 	OS.SelectObject (dstHdc, oldBrush);
@@ -519,7 +516,7 @@ void updateText () {
 	RECT rect = new RECT ();
 	TCHAR buffer = new TCHAR (shell.getCodePage (), overlayText, false);
 	int length = buffer.length();
-	long /*int*/ hFont = 0, oldHFont = 0;
+	long hFont = 0, oldHFont = 0;
 	NONCLIENTMETRICS info = new NONCLIENTMETRICS ();
 	info.cbSize = NONCLIENTMETRICS.sizeof;
 	if (OS.SystemParametersInfo (OS.SPI_GETNONCLIENTMETRICS, 0, info, 0)) {
@@ -558,13 +555,13 @@ void updateText () {
 	iconInfo.fIcon = true;
 	iconInfo.hbmColor = hBitmap;
 	iconInfo.hbmMask = hMask;
-	long /*int*/ hIcon = OS.CreateIconIndirect (iconInfo);
+	long hIcon = OS.CreateIconIndirect (iconInfo);
 	if (hIcon == 0) error (SWT.ERROR_NO_HANDLES);
 	OS.DeleteObject (hBitmap);
 	OS.DeleteObject (hMask);
 
-	long /*int*/ mTaskbarList3 = parent.mTaskbarList3;
-	long /*int*/ hwnd = shell.handle;
+	long mTaskbarList3 = parent.mTaskbarList3;
+	long hwnd = shell.handle;
 	/* ITaskbarList3::SetOverlayIcon */
 	OS.VtblCall (18, mTaskbarList3, hwnd, hIcon, 0);
 	OS.DestroyIcon (hIcon);

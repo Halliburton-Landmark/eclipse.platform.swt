@@ -52,9 +52,9 @@ public class Link extends Control {
 	String [] ids;
 	int [] mnemonics;
 	int focusIndex, mouseDownIndex;
-	long /*int*/ font;
+	long font;
 	static final RGB LAST_FALLBACK_LINK_FOREGROUND = new RGB (0, 51, 153);
-	static final long /*int*/ LinkProc;
+	static final long LinkProc;
 	static final TCHAR LinkClass = new TCHAR (0, OS.WC_LINK, true);
 	static {
 		WNDCLASS lpWndClass = new WNDCLASS ();
@@ -147,7 +147,7 @@ public void addSelectionListener (SelectionListener listener) {
 }
 
 @Override
-long /*int*/ callWindowProc (long /*int*/ hwnd, int msg, long /*int*/ wParam, long /*int*/ lParam) {
+long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 	if (handle == 0) return 0;
 	/*
 	* Feature in Windows.  By convention, native Windows controls
@@ -172,9 +172,9 @@ long /*int*/ callWindowProc (long /*int*/ hwnd, int msg, long /*int*/ wParam, lo
 	if (hHint != SWT.DEFAULT && hHint < 0) hHint = 0;
 	int width, height;
 	if (useCommonControl()) {
-		long /*int*/ hDC = OS.GetDC (handle);
-		long /*int*/ newFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
-		long /*int*/ oldFont = OS.SelectObject (hDC, newFont);
+		long hDC = OS.GetDC (handle);
+		long newFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
+		long oldFont = OS.SelectObject (hDC, newFont);
 		if (text.length () > 0) {
 			TCHAR buffer = new TCHAR (getCodePage (), parse (text), false);
 			RECT rect = new RECT ();
@@ -832,17 +832,17 @@ TCHAR windowClass () {
 }
 
 @Override
-long /*int*/ windowProc () {
+long windowProc () {
 	return LinkProc;
 }
 
 @Override
-LRESULT WM_CHAR (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_CHAR (long wParam, long lParam) {
 	LRESULT result = super.WM_CHAR (wParam, lParam);
 	if (result != null) return result;
 	if (!useCommonControl()) {
 		if (focusIndex == -1) return result;
-		switch ((int)/*64*/wParam) {
+		switch ((int)wParam) {
 			case ' ':
 			case SWT.CR:
 				Event event = new Event ();
@@ -865,7 +865,7 @@ LRESULT WM_CHAR (long /*int*/ wParam, long /*int*/ lParam) {
 				break;
 		}
 	} else {
-		switch ((int)/*64*/wParam) {
+		switch ((int)wParam) {
 			case ' ':
 			case SWT.CR:
 			case SWT.TAB:
@@ -875,7 +875,7 @@ LRESULT WM_CHAR (long /*int*/ wParam, long /*int*/ lParam) {
 				* This allows the application to cancel an operation that is normally
 				* performed in WM_KEYDOWN from WM_CHAR.
 				*/
-				long /*int*/ code = callWindowProc (handle, OS.WM_KEYDOWN, wParam, lParam);
+				long code = callWindowProc (handle, OS.WM_KEYDOWN, wParam, lParam);
 				return new LRESULT (code);
 		}
 
@@ -884,11 +884,11 @@ LRESULT WM_CHAR (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_GETDLGCODE (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_GETDLGCODE (long wParam, long lParam) {
 	LRESULT result = super.WM_GETDLGCODE (wParam, lParam);
 	if (result != null) return result;
 	int index, count;
-	long /*int*/ code = 0;
+	long code = 0;
 	if (useCommonControl()) {
 		LITEM item = new LITEM ();
 		item.mask = OS.LIF_ITEMINDEX | OS.LIF_STATE;
@@ -920,21 +920,21 @@ LRESULT WM_GETDLGCODE (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_GETFONT (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_GETFONT (long wParam, long lParam) {
 	LRESULT result = super.WM_GETFONT (wParam, lParam);
 	if (result != null) return result;
-	long /*int*/ code = callWindowProc (handle, OS.WM_GETFONT, wParam, lParam);
+	long code = callWindowProc (handle, OS.WM_GETFONT, wParam, lParam);
 	if (code != 0) return new LRESULT (code);
 	if (font == 0) font = defaultFont ();
 	return new LRESULT (font);
 }
 
 @Override
-LRESULT WM_KEYDOWN (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_KEYDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_KEYDOWN (wParam, lParam);
 	if (result != null) return result;
 	if (useCommonControl()) {
-		switch ((int)/*64*/wParam) {
+		switch ((int)wParam) {
 			case OS.VK_SPACE:
 			case OS.VK_RETURN:
 			case OS.VK_TAB:
@@ -951,14 +951,14 @@ LRESULT WM_KEYDOWN (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_KILLFOCUS (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_KILLFOCUS (long wParam, long lParam) {
 	LRESULT result = super.WM_KILLFOCUS (wParam, lParam);
 	if (!useCommonControl()) redraw ();
 	return result;
 }
 
 @Override
-LRESULT WM_LBUTTONDOWN (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_LBUTTONDOWN (wParam, lParam);
 	if (result == LRESULT.ZERO) return result;
 	if (!useCommonControl()) {
@@ -997,7 +997,7 @@ LRESULT WM_LBUTTONDOWN (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_LBUTTONUP (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_LBUTTONUP (long wParam, long lParam) {
 	LRESULT result = super.WM_LBUTTONUP (wParam, lParam);
 	if (result == LRESULT.ZERO) return result;
 	if (!useCommonControl()) {
@@ -1020,7 +1020,7 @@ LRESULT WM_LBUTTONUP (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_NCHITTEST (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_NCHITTEST (long wParam, long lParam) {
 	LRESULT result = super.WM_NCHITTEST (wParam, lParam);
 	if (result != null) return result;
 
@@ -1033,7 +1033,7 @@ LRESULT WM_NCHITTEST (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_MOUSEMOVE (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_MOUSEMOVE (long wParam, long lParam) {
 	LRESULT result = super.WM_MOUSEMOVE (wParam, lParam);
 	if (!useCommonControl()) {
 		int x = OS.GET_X_LPARAM (lParam);
@@ -1069,7 +1069,7 @@ LRESULT WM_MOUSEMOVE (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_PAINT (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_PAINT (long wParam, long lParam) {
 	if ((state & DISPOSE_SENT) != 0) return LRESULT.ZERO;
 	if (useCommonControl()) {
 		return super.WM_PAINT (wParam, lParam);
@@ -1094,7 +1094,7 @@ LRESULT WM_PAINT (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_PRINTCLIENT (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_PRINTCLIENT (long wParam, long lParam) {
 	LRESULT result = super.WM_PRINTCLIENT (wParam, lParam);
 	if (!useCommonControl()) {
 		RECT rect = new RECT ();
@@ -1110,31 +1110,31 @@ LRESULT WM_PRINTCLIENT (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_SETCURSOR(long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_SETCURSOR(long wParam, long lParam) {
 	LRESULT result = super.WM_SETCURSOR (wParam, lParam);
 	if (result != null) return result;
-	long /*int*/ fDone = callWindowProc (handle, OS.WM_SETCURSOR, wParam, lParam);
+	long fDone = callWindowProc (handle, OS.WM_SETCURSOR, wParam, lParam);
 	/* Take responsibility for cursor over plain text after overriding WM_NCHITTEST. */
 	if (fDone == 0) OS.DefWindowProc (handle, OS.WM_SETCURSOR, wParam, lParam);
 	return LRESULT.ONE;
 }
 
 @Override
-LRESULT WM_SETFOCUS (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_SETFOCUS (long wParam, long lParam) {
 	LRESULT result = super.WM_SETFOCUS (wParam, lParam);
 	if (!useCommonControl()) redraw ();
 	return result;
 }
 
 @Override
-LRESULT WM_SETFONT (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_SETFONT (long wParam, long lParam) {
 	layout.setFont (Font.win32_new (display, wParam));
 	if (lParam != 0) OS.InvalidateRect (handle, null, true);
 	return super.WM_SETFONT (font = wParam, lParam);
 }
 
 @Override
-LRESULT WM_SIZE (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_SIZE (long wParam, long lParam) {
 	LRESULT result = super.WM_SIZE (wParam, lParam);
 	RECT rect = new RECT ();
 	OS.GetClientRect (handle, rect);
@@ -1146,7 +1146,7 @@ LRESULT WM_SIZE (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT wmColorChild (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT wmColorChild (long wParam, long lParam) {
 	LRESULT result = super.wmColorChild (wParam, lParam);
 	/*
 	* Feature in Windows.  When a SysLink is disabled, it does
@@ -1159,7 +1159,7 @@ LRESULT wmColorChild (long /*int*/ wParam, long /*int*/ lParam) {
 			if (result == null) {
 				int backPixel = getBackgroundPixel ();
 				OS.SetBkColor (wParam, backPixel);
-				long /*int*/ hBrush = findBrush (backPixel, OS.BS_SOLID);
+				long hBrush = findBrush (backPixel, OS.BS_SOLID);
 				return new LRESULT (hBrush);
 			}
 		}
@@ -1168,7 +1168,7 @@ LRESULT wmColorChild (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT wmNotifyChild (NMHDR hdr, long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 	if (useCommonControl()) {
 		switch (hdr.code) {
 			case OS.NM_RETURN:

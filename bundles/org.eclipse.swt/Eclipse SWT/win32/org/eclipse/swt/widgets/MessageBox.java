@@ -14,8 +14,8 @@
 package org.eclipse.swt.widgets;
 
 
-import org.eclipse.swt.internal.win32.*;
 import org.eclipse.swt.*;
+import org.eclipse.swt.internal.win32.*;
 
 /**
  * Instances of this class are used to inform or warn the user.
@@ -186,7 +186,7 @@ public int open () {
 	* anyway and not rely on MB_MODAL to work by making the
 	* parent be temporarily modal.
 	*/
-	long /*int*/ hwndOwner = parent != null ? parent.handle : 0;
+	long hwndOwner = parent != null ? parent.handle : 0;
 	Display display = parent != null ? parent.getDisplay (): Display.getCurrent ();
 	Dialog oldModal = null;
 	if ((bits & OS.MB_TASKMODAL) != 0) {

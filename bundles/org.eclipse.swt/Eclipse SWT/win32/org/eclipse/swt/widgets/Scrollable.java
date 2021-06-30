@@ -86,7 +86,7 @@ public Scrollable (Composite parent, int style) {
 }
 
 @Override
-long /*int*/ callWindowProc (long /*int*/ hwnd, int msg, long /*int*/ wParam, long /*int*/ lParam) {
+long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 	if (handle == 0) return 0;
 	return OS.DefWindowProc (hwnd, msg, wParam, lParam);
 }
@@ -128,7 +128,7 @@ public Rectangle computeTrim (int x, int y, int width, int height) {
 }
 
 Rectangle computeTrimInPixels (int x, int y, int width, int height) {
-	long /*int*/ scrolledHandle = scrolledHandle ();
+	long scrolledHandle = scrolledHandle ();
 	RECT rect = new RECT ();
 	OS.SetRect (rect, x, y, x + width, y + height);
 	int bits1 = OS.GetWindowLong (scrolledHandle, OS.GWL_STYLE);
@@ -177,7 +177,7 @@ int applyThemeBackground () {
 }
 
 void destroyScrollBar (int type) {
-	long /*int*/ hwnd = scrolledHandle ();
+	long hwnd = scrolledHandle ();
 	int bits = OS.GetWindowLong (hwnd, OS.GWL_STYLE);
 	if ((type & SWT.HORIZONTAL) != 0) {
 		style &= ~SWT.H_SCROLL;
@@ -212,7 +212,7 @@ public Rectangle getClientArea () {
 Rectangle getClientAreaInPixels () {
 	forceResize ();
 	RECT rect = new RECT ();
-	long /*int*/ scrolledHandle = scrolledHandle ();
+	long scrolledHandle = scrolledHandle ();
 	OS.GetClientRect (scrolledHandle, rect);
 	int x = rect.left, y = rect.top;
 	int width = rect.right - rect.left;
@@ -306,7 +306,7 @@ void reskinChildren (int flags) {
 	super.reskinChildren (flags);
 }
 
-long /*int*/ scrolledHandle () {
+long scrolledHandle () {
 	return handle;
 }
 
@@ -344,7 +344,7 @@ long /*int*/ windowProc () {
 }
 
 @Override
-LRESULT WM_HSCROLL (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_HSCROLL (long wParam, long lParam) {
 	LRESULT result = super.WM_HSCROLL (wParam, lParam);
 	if (result != null) return result;
 	if (horizontalBar != null && lParam == 0) {
@@ -354,13 +354,13 @@ LRESULT WM_HSCROLL (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_MOUSEWHEEL (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_MOUSEWHEEL (long wParam, long lParam) {
 	return wmScrollWheel ((state & CANVAS) != 0, wParam, lParam);
 }
 
 @Override
-LRESULT WM_SIZE (long /*int*/ wParam, long /*int*/ lParam) {
-	long /*int*/ code = callWindowProc (handle, OS.WM_SIZE, wParam, lParam);
+LRESULT WM_SIZE (long wParam, long lParam) {
+	long code = callWindowProc (handle, OS.WM_SIZE, wParam, lParam);
 	super.WM_SIZE (wParam, lParam);
 	// widget may be disposed at this point
 	if (code == 0) return LRESULT.ZERO;
@@ -368,7 +368,7 @@ LRESULT WM_SIZE (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_VSCROLL (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_VSCROLL (long wParam, long lParam) {
 	LRESULT result = super.WM_VSCROLL (wParam, lParam);
 	if (result != null) return result;
 	if (verticalBar != null && lParam == 0) {
@@ -377,7 +377,7 @@ LRESULT WM_VSCROLL (long /*int*/ wParam, long /*int*/ lParam) {
 	return result;
 }
 
-LRESULT wmScrollWheel (boolean update, long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT wmScrollWheel (boolean update, long wParam, long lParam) {
 	LRESULT result = super.WM_MOUSEWHEEL (wParam, lParam);
 	if (result != null) return result;
 	/*
@@ -419,7 +419,7 @@ LRESULT wmScrollWheel (boolean update, long /*int*/ wParam, long /*int*/ lParam)
 	*/
 	int vPosition = verticalBar == null ? 0 : verticalBar.getSelection ();
 	int hPosition = horizontalBar == null ? 0 : horizontalBar.getSelection ();
-	long /*int*/ code = callWindowProc (handle, OS.WM_MOUSEWHEEL, wParam, lParam);
+	long code = callWindowProc (handle, OS.WM_MOUSEWHEEL, wParam, lParam);
 	if (verticalBar != null) {
 		int position = verticalBar.getSelection ();
 		if (position != vPosition) {
@@ -439,7 +439,7 @@ LRESULT wmScrollWheel (boolean update, long /*int*/ wParam, long /*int*/ lParam)
 	return new LRESULT (code);
 }
 
-LRESULT wmScroll (ScrollBar bar, boolean update, long /*int*/ hwnd, int msg, long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT wmScroll (ScrollBar bar, boolean update, long hwnd, int msg, long wParam, long lParam) {
 	LRESULT result = null;
 	if (update) {
 		int type = msg == OS.WM_HSCROLL ? OS.SB_HORZ : OS.SB_VERT;
@@ -478,7 +478,7 @@ LRESULT wmScroll (ScrollBar bar, boolean update, long /*int*/ hwnd, int msg, lon
 		}
 		OS.SetScrollInfo (hwnd, type, info, true);
 	} else {
-		long /*int*/ code = callWindowProc (hwnd, msg, wParam, lParam);
+		long code = callWindowProc (hwnd, msg, wParam, lParam);
 		result = code == 0 ? LRESULT.ZERO : new LRESULT (code);
 	}
 	bar.wmScrollChild (wParam, lParam);

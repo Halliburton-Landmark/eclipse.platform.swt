@@ -13,11 +13,11 @@
  *******************************************************************************/
 package org.eclipse.swt.ole.win32;
 
+import java.io.*;
+
 import org.eclipse.swt.*;
-import java.io.File;
-import org.eclipse.swt.internal.ole.win32.COM;
-import org.eclipse.swt.internal.win32.OS;
-import org.eclipse.swt.internal.win32.TCHAR;
+import org.eclipse.swt.internal.ole.win32.*;
+import org.eclipse.swt.internal.win32.*;
 
 
 /**
@@ -393,7 +393,7 @@ public static String findProgramID (String extension) {
 	return ""; //$NON-NLS-1$
 }
 static String getKeyValue (TCHAR key) {
-	long /*int*/ [] phkResult = new long /*int*/ [1];
+	long [] phkResult = new long /*int*/ [1];
 	if (OS.RegOpenKeyEx (OS.HKEY_CLASSES_ROOT, key, 0, OS.KEY_READ, phkResult) != 0) {
 		return null;
 	}
@@ -416,7 +416,7 @@ static String getKeyValue (TCHAR key) {
 	return result;
 }
 private static boolean getKeyExists (TCHAR key) {
-	long /*int*/ [] phkResult = new long /*int*/ [1];
+	long [] phkResult = new long /*int*/ [1];
 	if (OS.RegOpenKeyEx (OS.HKEY_CLASSES_ROOT, key, 0, OS.KEY_READ, phkResult) != 0) {
 		return false;
 	}
