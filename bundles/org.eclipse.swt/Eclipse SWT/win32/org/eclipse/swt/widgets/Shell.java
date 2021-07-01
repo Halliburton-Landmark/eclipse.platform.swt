@@ -123,7 +123,7 @@ import org.eclipse.swt.internal.win32.*;
 public class Shell extends Decorations {
 	Menu activeMenu;
 	ToolTip [] toolTips;
-	long hIMC, hwndMDIClient, lpstrTip, toolTipHandle, balloonTipHandle, menuItemToolTipHandle;
+	long hwndMDIClient, lpstrTip, toolTipHandle, balloonTipHandle, menuItemToolTipHandle;
 	int minWidth = SWT.DEFAULT, minHeight = SWT.DEFAULT;
 	long [] brushes;
 	boolean showWithParent, fullScreen, wasMaximized, modified, center;
@@ -625,10 +625,6 @@ void createHandle () {
 		int flags = OS.SWP_DRAWFRAME | OS.SWP_NOMOVE | OS.SWP_NOSIZE | OS.SWP_NOZORDER | OS.SWP_NOACTIVATE;
 		OS.SetWindowPos (handle, 0, 0, 0, 0, 0, flags);
 	}
-	if (OS.IsDBLocale) {
-		hIMC = OS.ImmCreateContext ();
-		if (hIMC != 0) OS.ImmAssociateContext (handle, hIMC);
-	}
 }
 
 void createMenuItemToolTipHandle() {
@@ -717,16 +713,6 @@ void destroyWidget() {
 		fixActiveShell();
 	} finally {
 		super.destroyWidget();
-
-		/*
-		* Destroy context only after the controls that used it were destroyed.
-		* Technically, that shouldn't be necessary, because 'Control.releaseWidget'
-		* clears up association by calling 'OS.ImmAssociateContext (handle, 0)'.
-		* However, there's a bug in Windows 10 (see bug 526758), and this is the workaround.
-		*/
-		if (OS.IsDBLocale) {
-			if (hIMC != 0) OS.ImmDestroyContext (hIMC);
-		}
 	}
 }
 
@@ -2168,18 +2154,6 @@ int widgetStyle () {
 
 @Override
 LRESULT WM_ACTIVATE (long wParam, long lParam) {
-	/*
-	* Bug in Windows XP.  When a Shell is deactivated, the
-	* IME composition window does not go away. This causes
-	* repaint issues.  The fix is to commit the composition
-	* string.
-	*/
-	if (OS.LOWORD (wParam) == 0 && OS.IsDBLocale && hIMC != 0) {
-		if (OS.ImmGetOpenStatus (hIMC)) {
-			OS.ImmNotifyIME (hIMC, OS.NI_COMPOSITIONSTR, OS.CPS_COMPLETE, 0);
-		}
-	}
-
 	/* Process WM_ACTIVATE */
 	LRESULT result = super.WM_ACTIVATE (wParam, lParam);
 	if (OS.LOWORD (wParam) == 0) {
