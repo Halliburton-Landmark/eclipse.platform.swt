@@ -1271,10 +1271,6 @@ public void setExpanded (boolean expanded) {
 					OS.UpdateWindow (hwnd);
 					OS.DefWindowProc (hwnd, OS.WM_SETREDRAW, 0, 0);
 				}
-				/*
-				* This code is intentionally commented.
-				*/
-//				OS.SendMessage (hwnd, OS.WM_SETREDRAW, 0, 0);
 			}
 		}
 	}
@@ -1350,10 +1346,6 @@ public void setExpanded (boolean expanded) {
 			if (hwnd != topHandle) {
 				OS.DefWindowProc (hwnd, OS.WM_SETREDRAW, 1, 0);
 			}
-			/*
-			* This code is intentionally commented.
-			*/
-//			OS.SendMessage (hwnd, OS.WM_SETREDRAW, 1, 0);
 			if (fixScroll) {
 				parent.updateScrollBar ();
 				SCROLLINFO info = new SCROLLINFO ();

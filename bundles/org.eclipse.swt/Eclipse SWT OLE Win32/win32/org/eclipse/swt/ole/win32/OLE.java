@@ -375,7 +375,6 @@ public static String findProgramID (String extension) {
 
 	if (extension.charAt (0) != '.') extension = "." + extension; //$NON-NLS-1$
 
-	/* Use the character encoding for the default locale */
 	TCHAR extensionKey = new TCHAR(0, extension, true);
 	String result = getKeyValue(extensionKey);
 	if (result != null) {
@@ -404,7 +403,6 @@ static String getKeyValue (TCHAR key) {
 		if (length == 0) {
 			result = "";
 		} else {
-			/* Use the character encoding for the default locale */
 			TCHAR lpData = new TCHAR (0, length);
 			if (OS.RegQueryValueEx (phkResult [0], null, 0, null, lpData, lpcbData) == 0) {
 				length = Math.max(0, lpData.length () - 1);
