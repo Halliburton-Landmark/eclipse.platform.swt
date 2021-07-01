@@ -115,9 +115,8 @@ public static String [] getExtensions () {
 	/* Use the character encoding for the default locale */
 	TCHAR lpName = new TCHAR (0, 1024);
 	int [] lpcName = new int [] {lpName.length ()};
-	FILETIME ft = new FILETIME ();
 	int dwIndex = 0, count = 0;
-	while (OS.RegEnumKeyEx (OS.HKEY_CLASSES_ROOT, dwIndex, lpName, lpcName, null, null, null, ft) != OS.ERROR_NO_MORE_ITEMS) {
+	while (OS.RegEnumKeyEx (OS.HKEY_CLASSES_ROOT, dwIndex, lpName, lpcName, null, null, null, 0) != OS.ERROR_NO_MORE_ITEMS) {
 		String extension = lpName.toString (0, lpcName [0]);
 		lpcName [0] = lpName.length ();
 		if (extension.length () > 0 && extension.charAt (0) == '.') {
@@ -226,9 +225,8 @@ public static Program [] getPrograms () {
 	/* Use the character encoding for the default locale */
 	TCHAR lpName = new TCHAR (0, 1024);
 	int [] lpcName = new int [] {lpName.length ()};
-	FILETIME ft = new FILETIME ();
 	int dwIndex = 0;
-	while (OS.RegEnumKeyEx (OS.HKEY_CLASSES_ROOT, dwIndex, lpName, lpcName, null, null, null, ft) != OS.ERROR_NO_MORE_ITEMS) {
+	while (OS.RegEnumKeyEx (OS.HKEY_CLASSES_ROOT, dwIndex, lpName, lpcName, null, null, null, 0) != OS.ERROR_NO_MORE_ITEMS) {
 		String path = lpName.toString (0, lpcName [0]);
 		lpcName [0] = lpName.length ();
 		Program program = getProgram (path, null);
