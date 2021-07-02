@@ -67,6 +67,14 @@ extern int IS_JNI_1_2;
 			if (hm) var = GetProcAddress(hm, #name); \
 			initialized = 1; \
 		}
+/*
+ * Java's boolean[] may not be used to interface to C on Windows, because:
+ * WINAPI 'BOOL'     is 4 bytes
+ * Java's 'jboolean' is 1 byte
+ * Trying to pass Java's boolean[] will pass wrong data on read and corrupt memory on write.
+ * Use java's 'int[]' as a correct interface to 'BOOL'.
+ */
+#define jbooleanArray DONT_USE_jbooleanArray_USE_intArray_INSTEAD
 #else
 #define CALLING_CONVENTION
 #define LOAD_FLAGS RTLD_LAZY
@@ -79,6 +87,14 @@ extern int IS_JNI_1_2;
 			initialized = 1; \
 	                CHECK_DLERROR \
 		}
+/*
+ * Java's boolean[] may not be used to interface to C on Linux, because:
+ * GLib's 'gboolean' is 4 bytes
+ * Java's 'jboolean' is 1 byte
+ * Trying to pass Java's boolean[] will pass wrong data on read and corrupt memory on write.
+ * Use java's 'int[]' as a correct interface to 'gboolean'.
+ */
+#define jbooleanArray DONT_USE_jbooleanArray_USE_intArray_INSTEAD
 #endif
 
 void throwOutOfMemory(JNIEnv *env);
