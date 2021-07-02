@@ -2633,7 +2633,6 @@ public static final native boolean GetCharWidth (long hdc, int iFirstChar, int i
 /**
  * @param hInstance cast=(HINSTANCE)
  * @param lpClassName cast=(LPWSTR),flags=no_out
- * @param lpWndClass flags=no_in
  */
 public static final native boolean GetClassInfo (long hInstance, char [] lpClassName, WNDCLASS lpWndClass);
 /** @param hWnd cast=(HWND) */
