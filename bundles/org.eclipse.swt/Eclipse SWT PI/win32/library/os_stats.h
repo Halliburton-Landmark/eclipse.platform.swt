@@ -342,7 +342,6 @@ typedef enum {
 	ImmSetCompositionWindow_FUNC,
 	ImmSetConversionStatus_FUNC,
 	ImmSetOpenStatus_FUNC,
-	InitCommonControls_FUNC,
 	InitCommonControlsEx_FUNC,
 	InsertMenuItem_FUNC,
 	InternetGetCookie_FUNC,
