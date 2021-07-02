@@ -2291,6 +2291,7 @@ public static final native long CallWindowProc (long lpPrevWndFunc, long hWnd, i
 public static final native long CharLower (long ch);
 /** @param ch cast=(LPWSTR) */
 public static final native long CharUpper (long ch);
+public static final native boolean ChooseColor (CHOOSECOLOR lpcc);
 public static final native boolean ChooseFont (CHOOSEFONT chooseFont);
 /** @param hWnd cast=(HWND) */
 public static final native boolean ClientToScreen (long hWnd, POINT lpPoint);
