@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -16,6 +16,7 @@ package org.eclipse.swt.internal;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
+import java.nio.file.*;
 import java.util.function.*;
 import java.util.jar.*;
 
@@ -26,17 +27,17 @@ public class Library {
 	/**
 	 * SWT Major version number (must be >= 0)
 	 */
-    static int MAJOR_VERSION = 4;
+	static int MAJOR_VERSION = 4;
 
 	/**
 	 * SWT Minor version number (must be in the range 0..999)
 	 */
-    static int MINOR_VERSION = 924;
+	static int MINOR_VERSION = 944;
 
 	/**
 	 * SWT revision number (must be >= 0)
 	 */
-	static int REVISION = 25;
+	static int REVISION = 8;
 
 	/**
 	 * The JAVA and SWT versions
@@ -50,14 +51,11 @@ public class Library {
 	static final String JAVA_LIB_PATH = "java.library.path";
 	static final String SWT_LIB_PATH = "swt.library.path";
 
-
-	/* 64-bit support */
-	static final boolean IS_64 = longConst() == (long /*int*/)longConst();
 	static final String SUFFIX_64 = "-64";	//$NON-NLS-1$
 	static final String SWT_LIB_DIR;
 
 static {
-	DELIMITER = System.getProperty("line.separator"); //$NON-NLS-1$
+	DELIMITER = System.lineSeparator(); //$NON-NLS-1$
 	SEPARATOR = File.separator;
 	USER_HOME = System.getProperty ("user.home");
 	SWT_LIB_DIR = ".swt" + SEPARATOR + "lib" + SEPARATOR + os() + SEPARATOR + arch(); //$NON-NLS-1$ $NON-NLS-2$
@@ -67,7 +65,6 @@ static {
 
 static String arch() {
 	String osArch = System.getProperty("os.arch"); //$NON-NLS-1$
-	if (osArch.equals ("i386") || osArch.equals ("i686")) return "x86"; //$NON-NLS-1$ $NON-NLS-2$ $NON-NLS-3$
 	if (osArch.equals ("amd64")) return "x86_64"; //$NON-NLS-1$ $NON-NLS-2$
 	return osArch;
 }
@@ -84,7 +81,12 @@ static void chmod(String permision, String path) {
 	if (os().equals ("win32")) return; //$NON-NLS-1$
 	try {
 		Runtime.getRuntime ().exec (new String []{"chmod", permision, path}).waitFor(); //$NON-NLS-1$
-	} catch (Throwable e) {}
+	} catch (Throwable e) {
+		try {
+			new File(path).setExecutable(true);
+		} catch (Throwable e1) {
+		}
+	}
 }
 
 /* Use method instead of in-lined constants to avoid compiler warnings */
@@ -136,45 +138,59 @@ public static int SWT_VERSION (int major, int minor) {
 	return major * 1000 + minor;
 }
 
+private static boolean extractResource(String resourceName, File outFile) {
+	try (InputStream inputStream = Library.class.getResourceAsStream (resourceName)) {
+		if (inputStream == null) return false;
+		Files.copy(inputStream, outFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+	} catch (Throwable e) {
+		return false;
+	}
+
+	return true;
+}
+
 /**
- *	Extract file with 'mappedName' into path 'extractToFilePath'. Cleanup leftovers if extract failed.
+ * Extract file with 'mappedName' into path 'extractToFilePath'.
+ * Does not overwrite existing file.
+ * Does not leave trash on error.
  * @param extractToFilePath full path of where the file is to be extacted to, inc name of file,
  *                          e.g /home/USER/.swt/lib/linux/x86_64/libswt-MYLIB-gtk-4826.so
  * @param mappedName file to be searched in jar.
  * @return	true upon success, failure if something went wrong.
  */
-static boolean extract (String extractToFilePath, String mappedName, StringBuilder message) {
-	FileOutputStream os = null;
-	InputStream is = null;
+static boolean extract (String extractToFilePath, String mappedName) {
 	File file = new File(extractToFilePath);
-	boolean extracted = false;
+	if (file.exists ()) return true;
+
+	// Write to temp file first, so that other processes don't see
+	// partially written library on disk
+	File tempFile;
 	try {
-		if (!file.exists ()) {
-			is = Library.class.getResourceAsStream ("/" + mappedName); //$NON-NLS-1$
-			if (is != null) {
-				extracted = true;
-				int read;
-				byte [] buffer = new byte [4096];
-				os = new FileOutputStream (extractToFilePath);
-				while ((read = is.read (buffer)) != -1) {
-					os.write(buffer, 0, read);
-				}
-				os.close ();
-				is.close ();
-				chmod ("755", extractToFilePath);
-				return true;
-			}
-		}
+		tempFile = File.createTempFile (file.getName(), ".tmp", file.getParentFile()); //$NON-NLS-1$
 	} catch (Throwable e) {
-		try {
-			if (os != null) os.close ();
-		} catch (IOException e1) {}
-		try {
-			if (is != null) is.close ();
-		} catch (IOException e1) {}
-		if (extracted && file.exists ()) file.delete ();
+		return false;
+				}
+
+	// Extract resource
+	String resourceName = "/" + mappedName.replace('\\', '/'); //$NON-NLS-1$
+	if (!extractResource (resourceName, tempFile)) {
+		tempFile.delete();
+		return false;
+			}
+
+	// Make it executable
+	chmod ("755", tempFile.getPath()); //$NON-NLS-1$
+
+	// "Publish" file now that it's ready to use.
+	// If there is a file already, then someone published while we were
+	// extracting, just delete our file and consider it a success.
+	try {
+		Files.move (tempFile.toPath(), file.toPath());
+	} catch (Throwable e) {
+		tempFile.delete();
 	}
-	return false;
+
+	return true;
 }
 
 static boolean isLoadable () {
@@ -211,7 +227,7 @@ static boolean isLoadable () {
 
 static boolean load (String libName, StringBuilder message) {
 	try {
-		if (libName.indexOf (SEPARATOR) != -1) {
+		if (libName.contains (SEPARATOR)) {
 			System.load (libName);
 		} else {
 			System.loadLibrary (libName);
@@ -257,24 +273,26 @@ public static void loadLibrary (String name, boolean mapName) {
 	String prop = System.getProperty ("sun.arch.data.model"); //$NON-NLS-1$
 	if (prop == null) prop = System.getProperty ("com.ibm.vm.bitmode"); //$NON-NLS-1$
 	if (prop != null) {
-		if ("32".equals (prop) && IS_64) { //$NON-NLS-1$
+		if ("32".equals (prop)) { //$NON-NLS-1$
 			throw new UnsatisfiedLinkError ("Cannot load 64-bit SWT libraries on 32-bit JVM"); //$NON-NLS-1$
-		}
-		if ("64".equals (prop) && !IS_64) { //$NON-NLS-1$
-			throw new UnsatisfiedLinkError ("Cannot load 32-bit SWT libraries on 64-bit JVM"); //$NON-NLS-1$
 		}
 	}
 
 	/* Compute the library name and mapped name */
-	String libName1, libName2, mappedName1, mappedName2;
+	final int candidates = 3;
+	String[] libNames = new String[candidates], mappedNames = new String[candidates];
 	if (mapName) {
 		String version = getVersionString ();
-		libName1 = name + "-" + Platform.PLATFORM + "-" + version;  //$NON-NLS-1$ //$NON-NLS-2$
-		libName2 = name + "-" + Platform.PLATFORM;  //$NON-NLS-1$
-		mappedName1 = mapLibraryName (libName1);
-		mappedName2 = mapLibraryName (libName2);
+		libNames[0] = name + "-" + Platform.PLATFORM + "-" + version;  //$NON-NLS-1$ //$NON-NLS-2$
+		libNames[1] = name + "-" + Platform.PLATFORM;  //$NON-NLS-1$
+		libNames[2] = name;
+		for (int i = 0; i < candidates; i++) {
+			mappedNames[i] = mapLibraryName (libNames[i]);
+		}
 	} else {
-		libName1 = libName2 = mappedName1 = mappedName2 = name;
+		for (int i = 0; i < candidates; i++) {
+			libNames[i] = mappedNames[i] = name;
+		}
 	}
 
 	StringBuilder message = new StringBuilder();
@@ -283,20 +301,24 @@ public static void loadLibrary (String name, boolean mapName) {
 	String path = System.getProperty (SWT_LIB_PATH); //$NON-NLS-1$
 	if (path != null) {
 		path = new File (path).getAbsolutePath ();
-		if (load (path + SEPARATOR + mappedName1, message)) return;
-		if (mapName && load (path + SEPARATOR + mappedName2, message)) return;
+		for (int i = 0; i < candidates; i++) {
+			if ((i == 0 || mapName) && load (path + SEPARATOR + mappedNames[i], message)) return;
+		}
 	}
 
 	/* Try loading library from java library path */
-	if (load (libName1, message)) return;
-	if (mapName && load (libName2, message)) return;
+	for (int i = 0; i < candidates; i++) {
+		if ((i == 0 || mapName) && load (libNames[i], message)) return;
+	}
 
 	/* Try loading library from the tmp directory if swt library path is not specified.
 	 * Create the tmp folder if it doesn't exist. Tmp folder looks like this:
 	 * ~/.swt/lib/<platform>/<arch>/
 	 */
-	String fileName1 = mappedName1;
-	String fileName2 = mappedName2;
+	String[] fileNames = new String[candidates];
+	for (int i = 0; i < candidates; i++) {
+		fileNames[i] = mappedNames[i];
+	}
 	if (path == null) {
 		path = USER_HOME;
 		File dir = new File (path, SWT_LIB_DIR);
@@ -304,22 +326,21 @@ public static void loadLibrary (String name, boolean mapName) {
 			path = dir.getAbsolutePath ();
 		} else {
 			/* fall back to using the home dir directory */
-			if (IS_64) {
-				fileName1 = mapLibraryName (libName1 + SUFFIX_64);
-				fileName2 = mapLibraryName (libName2 + SUFFIX_64);
+			for (int i = 0; i < candidates; i++) {
+				fileNames[i] = mapLibraryName (libNames[i] + SUFFIX_64);
 			}
 		}
-		if (load (path + SEPARATOR + fileName1, message)) return;
-		if (mapName && load (path + SEPARATOR + fileName2, message)) return;
+		for (int i = 0; i < candidates; i++) {
+			if ((i == 0 || mapName) && load (path + SEPARATOR + fileNames[i], message)) return;
+		}
 	}
 
 	/* Try extracting and loading library from jar. */
 	if (path != null) {
-		if (extract (path + SEPARATOR + fileName1, mappedName1, message)) {
-		    if (load(path + SEPARATOR + fileName1, message)) return;
-		}
-		if (mapName && extract (path + SEPARATOR + fileName2, mappedName2, message)) {
-		    if (load(path + SEPARATOR + fileName2, message)) return;
+		for (int i = 0; i < candidates; i++) {
+			if ((i == 0 || mapName) && extract (path + SEPARATOR + fileNames[i], mappedNames[i])) {
+				if (load(path + SEPARATOR + fileNames[i], message)) return;
+			}
 		}
 	}
 
@@ -328,10 +349,14 @@ public static void loadLibrary (String name, boolean mapName) {
 }
 
 static String mapLibraryName (String libName) {
+	return mapLibraryName(libName, true);
+}
+
+static String mapLibraryName (String libName, boolean replaceDylib) {
 	/* SWT libraries in the Macintosh use the extension .jnilib but the some VMs map to .dylib. */
 	libName = System.mapLibraryName (libName);
 	String ext = ".dylib"; //$NON-NLS-1$
-	if (libName.endsWith(ext)) {
+	if (libName.endsWith(ext) && replaceDylib) {
 		libName = libName.substring(0, libName.length() - ext.length()) + ".jnilib"; //$NON-NLS-1$
 	}
 	return libName;
@@ -357,7 +382,9 @@ public static String getVersionString () {
 	return version;
 }
 
-
+public static File findResource(String subDir, String resourceName, boolean mapResourceName){
+	return findResource(subDir, resourceName, mapResourceName, true, true);
+}
 /**
  * Locates a resource located either in java library path, swt library path, or attempts to extract it from inside swt.jar file.
  * This function supports a single level subfolder, e.g SubFolder/resource.
@@ -369,14 +396,14 @@ public static String getVersionString () {
  * @param resourceName e.g swt-webkitgtk
  * @param mapResourceName  true if you like platform specific mapping applied to resource name. e.g  MyLib -> libMyLib-gtk-4826.so
  */
-public static File findResource(String subDir, String resourceName, boolean mapResourceName){
+public static File findResource(String subDir, String resourceName, boolean mapResourceName, boolean replaceDylib, boolean searchInOsgi){
 
 	//We construct a 'maybe' subdirectory path. 'Maybe' because if no subDir given, then it's an empty string "".
 	                                                                         //       subdir  e.g:  subdir
 	String maybeSubDirPath = subDir != null ? subDir + SEPARATOR : "";       //               e.g:  subdir/  or ""
 	String maybeSubDirPathWithPrefix = subDir != null ? SEPARATOR + maybeSubDirPath : ""; //  e.g: /subdir/  or ""
 	final String finalResourceName = mapResourceName ?
-			mapLibraryName(resourceName + "-" + Platform.PLATFORM + "-" + getVersionString ()) // e.g libMyLib-gtk-3826.so
+			mapLibraryName(resourceName + "-" + Platform.PLATFORM + "-" + getVersionString (), replaceDylib) // e.g libMyLib-gtk-3826.so
 			: resourceName;
 
 	// 1) Look for the resource in the java/swt library path(s)
@@ -386,7 +413,7 @@ public static File findResource(String subDir, String resourceName, boolean mapR
 		Function<String, File> lookForFileInPath = searchPath -> {
 			String classpath = System.getProperty(searchPath);
 			if (classpath != null){
-				String[] paths = classpath.split(":");
+				String[] paths = classpath.split(File.pathSeparator);
 				for (String path : paths) {
 				File file = new File(path + SEPARATOR + maybeSubDirPath + finalResourceName);
 					if (file.exists()){
@@ -406,7 +433,7 @@ public static File findResource(String subDir, String resourceName, boolean mapR
 
 	// 2) If SWT is ran as OSGI bundle (e.g inside Eclipse), then local resources are extracted to
 	// eclipse/configuration/org.eclipse.osgi/NN/N/.cp/<resource> and we're given a pointer to the file.
-	{
+	if (searchInOsgi) {
 		// If this is an OSGI bundle look for the resource using getResource
 		URL url = Library.class.getClassLoader().getResource(maybeSubDirPathWithPrefix + finalResourceName);
 		URLConnection connection;
@@ -442,18 +469,17 @@ public static File findResource(String subDir, String resourceName, boolean mapR
 			// Create temp directory if it doesn't exist
 			File tempDir = new File (USER_HOME, SWT_LIB_DIR + maybeSubDirPathWithPrefix);
 			if ((!tempDir.exists () || tempDir.isDirectory ())) {
-				 tempDir.mkdirs ();
+				tempDir.mkdirs ();
 			}
 
-			StringBuilder message = new StringBuilder("");
-			if (extract(file.getPath(), maybeSubDirPath + finalResourceName, message)) {
+			if (extract(file.getPath(), maybeSubDirPath + finalResourceName)) {
 				if (file.exists()) {
 					return file;
 				}
 			}
 		}
 	}
-	throw new UnsatisfiedLinkError("Could not find resource" + resourceName +  (subDir != null ? " (in subdirectory: " + subDir + " )" : ""));
+	throw new UnsatisfiedLinkError("Could not find resource " + resourceName +  (subDir != null ? " (in subdirectory: " + subDir + " )" : ""));
 }
 
 
