@@ -18,10 +18,15 @@ import org.eclipse.swt.*;
 class BrowserFactory {
 
 WebBrowser createWebBrowser (int style) {
-	if ((style & SWT.WEBKIT) != 0) {
-		return new WebKit ();
-	}
-	return new IE ();
+    // This function can't throw, otherwise the Browser will be left in inconsistent state.
+    if ((style & SWT.EDGE) != 0) {
+        try {
+            return new Edge();
+        } catch (SWTError e) {
+            System.err.println(e);
+        }
+    }
+    return new IE ();
 }
 
 }

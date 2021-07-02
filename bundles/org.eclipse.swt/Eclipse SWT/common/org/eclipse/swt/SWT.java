@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2021 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -2374,6 +2374,20 @@ public class SWT {
 	 * @since 3.7
 	 */
 	public static final int WEBKIT = 1 << 16;
+
+	/**
+     * Style constant specifying that a Browser should use Edge (WebView2)
+     * for rendering its content (value is 1&lt;&lt;18).
+     * <p>NOTE: Edge integration is experimental, it isn't a drop-in replacement
+     * for Internet Explorer.</p>
+     * <p><b>Used By:</b></p>
+     * <ul>
+     * <li><code>Browser</code></li>
+     * </ul>
+     *
+     * @since 3.116
+     */
+    public static final int EDGE = 1 << 18;
 
 	/**
 	 * Style constant for balloon behavior (value is 1&lt;&lt;12).

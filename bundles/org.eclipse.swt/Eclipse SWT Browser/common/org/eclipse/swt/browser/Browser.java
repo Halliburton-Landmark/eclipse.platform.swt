@@ -186,6 +186,8 @@ static int checkStyle(int style) {
 				if (current.equalsIgnoreCase ("webkit")) { //$NON-NLS-1$
 					DefaultType = SWT.WEBKIT;
 					break;
+				} else if (current.equalsIgnoreCase ("edge") && "win32".equals (platform)) { //$NON-NLS-1$ //$NON-NLS-2$
+                    DefaultType = SWT.EDGE;
 				} else if (current.equalsIgnoreCase ("ie") && "win32".equals (platform)) { //$NON-NLS-1$ //$NON-NLS-2$
 					DefaultType = SWT.NONE;
 					break;
@@ -206,19 +208,14 @@ static int checkStyle(int style) {
 		style &= ~SWT.MOZILLA;
 	}
 
-	if ((style & SWT.WEBKIT) == 0) {
+	/* If particular backend isn't specified, use the value from the system property. */
+    if ((style & (SWT.WEBKIT | SWT.EDGE)) == 0) {
 		style |= DefaultType;
 	}
-	if ((style & SWT.WEBKIT) != 0) {
-		return style;
-	}
-	if ("win32".equals (platform)) { //$NON-NLS-1$
-		/*
-		* For IE on win32 the border is supplied by the embedded browser, so remove
-		* the style so that the parent Composite will not draw a second border.
-		*/
-		return style & ~SWT.BORDER;
-	}
+    if ("win32".equals (platform) && (style & SWT.EDGE) != 0) { //$NON-NLS-1$
+        /* Hack to enable Browser to receive focus. */
+        style |= SWT.EMBEDDED;
+    }
 	return style;
 }
 

@@ -106,7 +106,7 @@ public class Decorations extends Canvas {
 	Control savedFocus;
 	Button defaultButton, saveDefault;
 	int swFlags, nAccel;
-	long /*int*/ hAccel;
+	long hAccel;
 	boolean moved, resized, opened;
 	int oldX = OS.CW_USEDEFAULT, oldY = OS.CW_USEDEFAULT;
 	int oldWidth = OS.CW_USEDEFAULT, oldHeight = OS.CW_USEDEFAULT;
@@ -236,21 +236,6 @@ static int checkStyle (int style) {
 	*/
 	if ((style & SWT.CLOSE) != 0) style |= SWT.TITLE;
 
-	/*
-	* Bug in Windows.  The WS_CAPTION style must be
-	* set when the window is resizable or it does not
-	* draw properly.
-	*/
-	/*
-	* This code is intentionally commented.  It seems
-	* that this problem originally in Windows 3.11,
-	* has been fixed in later versions.  Because the
-	* exact nature of the drawing problem is unknown,
-	* keep the commented code around in case it comes
-	* back.
-	*/
-//	if ((style & SWT.RESIZE) != 0) style |= SWT.TITLE;
-
 	return style;
 }
 
@@ -274,7 +259,7 @@ protected void checkSubclass () {
 }
 
 @Override
-long /*int*/ callWindowProc (long /*int*/ hwnd, int msg, long /*int*/ wParam, long /*int*/ lParam) {
+long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 	if (handle == 0) return 0;
 	return OS.DefMDIChildProc (hwnd, msg, wParam, lParam);
 }
@@ -408,7 +393,7 @@ public void dispose () {
 	super.dispose ();
 }
 
-Menu findMenu (long /*int*/ hMenu) {
+Menu findMenu (long hMenu) {
 	if (menus == null) return null;
 	for (int i=0; i<menus.length; i++) {
 		Menu menu = menus [i];
@@ -904,7 +889,7 @@ void setImages (Image image, Image [] images) {
 	if (smallImage != null) smallImage.dispose ();
 	if (largeImage != null) largeImage.dispose ();
 	smallImage = largeImage = null;
-	long /*int*/ hSmallIcon = 0, hLargeIcon = 0;
+	long hSmallIcon = 0, hLargeIcon = 0;
 	Image smallIcon = null, largeIcon = null;
 	if (image != null) {
 		smallIcon = largeIcon = image;
@@ -1055,7 +1040,7 @@ public void setMenuBar (Menu menu) {
 	}
 	if (menu != null) display.removeBar (menu);
 	menuBar = menu;
-	long /*int*/ hMenu = menuBar != null ? menuBar.handle: 0;
+	long hMenu = menuBar != null ? menuBar.handle: 0;
 	OS.SetMenu (handle, hMenu);
 	destroyAccelerators ();
 }
@@ -1111,7 +1096,7 @@ void setParent () {
 	* undocumented and possibly dangerous Windows
 	* feature.
 	*/
-	long /*int*/ hwndParent = parent.handle;
+	long hwndParent = parent.handle;
 	display.lockActiveWindow = true;
 	OS.SetParent (handle, hwndParent);
 	if (!OS.IsWindowVisible (hwndParent)) {
@@ -1182,7 +1167,7 @@ void setSavedFocus (Control control) {
 }
 
 void setSystemMenu () {
-	long /*int*/ hMenu = OS.GetSystemMenu (handle, false);
+	long hMenu = OS.GetSystemMenu (handle, false);
 	if (hMenu == 0) return;
 	int oldCount = OS.GetMenuItemCount (hMenu);
 	if ((style & SWT.RESIZE) == 0) {
@@ -1241,13 +1226,12 @@ void setSystemMenu () {
 public void setText (String string) {
 	checkWidget ();
 	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	/* Use the character encoding for the default locale */
 	TCHAR buffer = new TCHAR (0, string, true);
 	/* Ensure that the title appears in the task bar.*/
 	if ((state & FOREIGN_HANDLE) != 0) {
-		long /*int*/ hHeap = OS.GetProcessHeap ();
+		long hHeap = OS.GetProcessHeap ();
 		int byteCount = buffer.length () * TCHAR.sizeof;
-		long /*int*/ pszText = OS.HeapAlloc (hHeap, OS.HEAP_ZERO_MEMORY, byteCount);
+		long pszText = OS.HeapAlloc (hHeap, OS.HEAP_ZERO_MEMORY, byteCount);
 		OS.MoveMemory (pszText, buffer, byteCount);
 		OS.DefWindowProc (handle, OS.WM_SETTEXT, 0, pszText);
 		if (pszText != 0) OS.HeapFree (hHeap, 0, pszText);
@@ -1370,13 +1354,13 @@ boolean translateMenuAccelerator (MSG msg) {
 boolean translateMDIAccelerator (MSG msg) {
 	if (!(this instanceof Shell)) {
 		Shell shell = getShell ();
-		long /*int*/ hwndMDIClient = shell.hwndMDIClient;
+		long hwndMDIClient = shell.hwndMDIClient;
 		if (hwndMDIClient != 0 && OS.TranslateMDISysAccel (hwndMDIClient, msg)) {
 			return true;
 		}
 		if (msg.message == OS.WM_KEYDOWN) {
 			if (OS.GetKeyState (OS.VK_CONTROL) >= 0) return false;
-			switch ((int)/*64*/(msg.wParam)) {
+			switch ((int)(msg.wParam)) {
 				case OS.VK_F4:
 					OS.PostMessage (handle, OS.WM_CLOSE, 0, 0);
 					return true;
@@ -1386,7 +1370,7 @@ boolean translateMDIAccelerator (MSG msg) {
 			return false;
 		}
 		if (msg.message == OS.WM_SYSKEYDOWN) {
-			switch ((int)/*64*/(msg.wParam)) {
+			switch ((int)(msg.wParam)) {
 				case OS.VK_F4:
 					OS.PostMessage (shell.handle, OS.WM_CLOSE, 0, 0);
 					return true;
@@ -1450,7 +1434,7 @@ int widgetExtStyle () {
 }
 
 @Override
-long /*int*/ widgetParent () {
+long widgetParent () {
 	Shell shell = getShell ();
 	return shell.hwndMDIClient ();
 }
@@ -1492,7 +1476,7 @@ int widgetStyle () {
 }
 
 @Override
-long /*int*/ windowProc (long /*int*/ hwnd, int msg, long /*int*/ wParam, long /*int*/ lParam) {
+long windowProc (long hwnd, int msg, long wParam, long lParam) {
 	switch (msg) {
 		case Display.SWT_GETACCEL:
 		case Display.SWT_GETACCELCOUNT:
@@ -1503,7 +1487,7 @@ long /*int*/ windowProc (long /*int*/ hwnd, int msg, long /*int*/ wParam, long /
 }
 
 @Override
-LRESULT WM_ACTIVATE (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_ACTIVATE (long wParam, long lParam) {
 	LRESULT result = super.WM_ACTIVATE (wParam, lParam);
 	if (result != null) return result;
 	/*
@@ -1568,7 +1552,7 @@ LRESULT WM_ACTIVATE (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_CLOSE (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_CLOSE (long wParam, long lParam) {
 	LRESULT result = super.WM_CLOSE (wParam, lParam);
 	if (result != null) return result;
 	if (isEnabled () && isActive ()) closeWidget ();
@@ -1576,14 +1560,14 @@ LRESULT WM_CLOSE (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_KILLFOCUS (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_KILLFOCUS (long wParam, long lParam) {
 	LRESULT result = super.WM_KILLFOCUS (wParam, lParam);
 	saveFocus ();
 	return result;
 }
 
 @Override
-LRESULT WM_MOVE (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_MOVE (long wParam, long lParam) {
 	if (moved) {
 		Point location = getLocationInPixels ();
 		if (location.x == oldX && location.y == oldY) {
@@ -1596,7 +1580,7 @@ LRESULT WM_MOVE (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_NCACTIVATE (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_NCACTIVATE (long wParam, long lParam) {
 	LRESULT result = super.WM_NCACTIVATE (wParam, lParam);
 	if (result != null) return result;
 	if (wParam == 0) {
@@ -1616,14 +1600,14 @@ LRESULT WM_NCACTIVATE (long /*int*/ wParam, long /*int*/ lParam) {
 		}
 	}
 	if (!(this instanceof Shell)) {
-		long /*int*/ hwndShell = getShell().handle;
+		long hwndShell = getShell().handle;
 		OS.SendMessage (hwndShell, OS.WM_NCACTIVATE, wParam, lParam);
 	}
 	return result;
 }
 
 @Override
-LRESULT WM_QUERYOPEN (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_QUERYOPEN (long wParam, long lParam) {
 	LRESULT result = super.WM_QUERYOPEN (wParam, lParam);
 	if (result != null) return result;
 	sendEvent (SWT.Deiconify);
@@ -1632,7 +1616,7 @@ LRESULT WM_QUERYOPEN (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_SETFOCUS (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_SETFOCUS (long wParam, long lParam) {
 	LRESULT result = super.WM_SETFOCUS (wParam, lParam);
 	if (isDisposed ()) return result;
 	if (savedFocus != this) restoreFocus ();
@@ -1640,12 +1624,12 @@ LRESULT WM_SETFOCUS (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_SIZE (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_SIZE (long wParam, long lParam) {
 	LRESULT result = null;
 	boolean changed = true;
 	if (resized) {
 		int newWidth = 0, newHeight = 0;
-		switch ((int)/*64*/wParam) {
+		switch ((int)wParam) {
 			case OS.SIZE_MAXIMIZED:
 				OS.GetWindowRect (handle, maxRect);
 			case OS.SIZE_RESTORED:
@@ -1676,11 +1660,11 @@ LRESULT WM_SIZE (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_SYSCOMMAND (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_SYSCOMMAND (long wParam, long lParam) {
 	LRESULT result = super.WM_SYSCOMMAND (wParam, lParam);
 	if (result != null) return result;
 	if (!(this instanceof Shell)) {
-		int cmd = (int)/*64*/wParam & 0xFFF0;
+		int cmd = (int)wParam & 0xFFF0;
 		switch (cmd) {
 			case OS.SC_CLOSE: {
 				OS.PostMessage (handle, OS.WM_CLOSE, 0, 0);
@@ -1696,7 +1680,7 @@ LRESULT WM_SYSCOMMAND (long /*int*/ wParam, long /*int*/ lParam) {
 }
 
 @Override
-LRESULT WM_WINDOWPOSCHANGING (long /*int*/ wParam, long /*int*/ lParam) {
+LRESULT WM_WINDOWPOSCHANGING (long wParam, long lParam) {
 	LRESULT result = super.WM_WINDOWPOSCHANGING (wParam, lParam);
 	if (result != null) return result;
 	if (display.lockActiveWindow) {

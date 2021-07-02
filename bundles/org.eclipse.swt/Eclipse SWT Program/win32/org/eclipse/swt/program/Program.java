@@ -84,7 +84,6 @@ public static Program findProgram (String extension) {
 	if (extension == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 	if (extension.length () == 0) return null;
 	if (extension.charAt (0) != '.') extension = "." + extension; //$NON-NLS-1$
-	/* Use the character encoding for the default locale */
 	TCHAR key = new TCHAR (0, extension, true);
 	Program program = null;
 	String command = assocQueryString (OS.ASSOCSTR_COMMAND, key, true);
@@ -116,9 +115,8 @@ public static String [] getExtensions () {
 	/* Use the character encoding for the default locale */
 	TCHAR lpName = new TCHAR (0, 1024);
 	int [] lpcName = new int [] {lpName.length ()};
-	FILETIME ft = new FILETIME ();
 	int dwIndex = 0, count = 0;
-	while (OS.RegEnumKeyEx (OS.HKEY_CLASSES_ROOT, dwIndex, lpName, lpcName, null, null, null, ft) != OS.ERROR_NO_MORE_ITEMS) {
+	while (OS.RegEnumKeyEx (OS.HKEY_CLASSES_ROOT, dwIndex, lpName, lpcName, null, null, null, 0) != OS.ERROR_NO_MORE_ITEMS) {
 		String extension = lpName.toString (0, lpcName [0]);
 		lpcName [0] = lpName.length ();
 		if (extension.length () > 0 && extension.charAt (0) == '.') {
@@ -140,9 +138,8 @@ public static String [] getExtensions () {
 }
 
 static String getKeyValue (String string, boolean expand) {
-	/* Use the character encoding for the default locale */
 	TCHAR key = new TCHAR (0, string, true);
-	long /*int*/ [] phkResult = new long /*int*/ [1];
+	long [] phkResult = new long [1];
 	if (OS.RegOpenKeyEx (OS.HKEY_CLASSES_ROOT, key, 0, OS.KEY_READ, phkResult) != 0) {
 		return null;
 	}
@@ -228,9 +225,8 @@ public static Program [] getPrograms () {
 	/* Use the character encoding for the default locale */
 	TCHAR lpName = new TCHAR (0, 1024);
 	int [] lpcName = new int [] {lpName.length ()};
-	FILETIME ft = new FILETIME ();
 	int dwIndex = 0;
-	while (OS.RegEnumKeyEx (OS.HKEY_CLASSES_ROOT, dwIndex, lpName, lpcName, null, null, null, ft) != OS.ERROR_NO_MORE_ITEMS) {
+	while (OS.RegEnumKeyEx (OS.HKEY_CLASSES_ROOT, dwIndex, lpName, lpcName, null, null, null, 0) != OS.ERROR_NO_MORE_ITEMS) {
 		String path = lpName.toString (0, lpcName [0]);
 		lpcName [0] = lpName.length ();
 		Program program = getProgram (path, null);
@@ -281,14 +277,13 @@ public static boolean launch (String fileName) {
 public static boolean launch (String fileName, String workingDir) {
 	if (fileName == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 
-	/* Use the character encoding for the default locale */
-	long /*int*/ hHeap = OS.GetProcessHeap ();
+	long hHeap = OS.GetProcessHeap ();
 	TCHAR buffer = new TCHAR (0, fileName, true);
 	int byteCount = buffer.length () * TCHAR.sizeof;
-	long /*int*/ lpFile = OS.HeapAlloc (hHeap, OS.HEAP_ZERO_MEMORY, byteCount);
+	long lpFile = OS.HeapAlloc (hHeap, OS.HEAP_ZERO_MEMORY, byteCount);
 	OS.MoveMemory (lpFile, buffer, byteCount);
 
-	long /*int*/ lpDirectory = 0;
+	long lpDirectory = 0;
 	if (workingDir != null && OS.PathIsExe(lpFile)) {
 	    TCHAR buffer1 = new TCHAR (0, workingDir, true);
 	    byteCount = buffer1.length () * TCHAR.sizeof;
@@ -337,11 +332,10 @@ public boolean execute (String fileName) {
 	}
 	if (append) fileName = " \"" + fileName + "\"";
 	String commandLine = prefix + fileName + suffix;
-	long /*int*/ hHeap = OS.GetProcessHeap ();
-	/* Use the character encoding for the default locale */
+	long hHeap = OS.GetProcessHeap ();
 	TCHAR buffer = new TCHAR (0, commandLine, true);
 	int byteCount = buffer.length () * TCHAR.sizeof;
-	long /*int*/ lpCommandLine = OS.HeapAlloc (hHeap, OS.HEAP_ZERO_MEMORY, byteCount);
+	long lpCommandLine = OS.HeapAlloc (hHeap, OS.HEAP_ZERO_MEMORY, byteCount);
 	OS.MoveMemory (lpCommandLine, buffer, byteCount);
 	STARTUPINFO lpStartupInfo = new STARTUPINFO ();
 	lpStartupInfo.cb = STARTUPINFO.sizeof;
@@ -390,9 +384,8 @@ public ImageData getImageData () {
 			fileName = fileName.substring (1, length - 1);
 		}
 	}
-	/* Use the character encoding for the default locale */
 	TCHAR lpszFile = new TCHAR (0, fileName, true);
-	long /*int*/ [] phiconSmall = new long /*int*/[1], phiconLarge = null;
+	long [] phiconSmall = new long[1], phiconLarge = null;
 	OS.ExtractIconEx (lpszFile, nIconIndex, phiconLarge, phiconSmall, 1);
 	if (phiconSmall [0] == 0) return null;
 	Image image = Image.win32_new (null, SWT.ICON, phiconSmall [0]);
