@@ -96,7 +96,7 @@ class WebKit extends WebBrowser {
 	URI tlsErrorUri;
 	String tlsErrorType;
 
-	boolean firstLoad = true;
+	boolean firstLoad = true; //WebKit2 only
 	static boolean FirstCreate = true;
 
 	/**
@@ -1791,6 +1791,8 @@ void onDispose (Event e) {
 		if (!browser.isClosing) {
 			close (false);
 		}
+	} else {
+		return;
 	}
 
 	for (BrowserFunction function : functions.values()) {

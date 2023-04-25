@@ -168,11 +168,9 @@ public static Frame new_Frame (final Composite parent) {
 	}
 	initializeSwing ();
 	final Frame [] frame = new Frame [1];
-	Object object = initFrame(handle, className);
-	if (object == null || !(object instanceof Frame)) {
-		SWT.error (SWT.ERROR_UNSPECIFIED , new Throwable(), " [Error while starting AWT]");
-	}
-	frame[0] = (Frame) object;
+	// Workaround for bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=548661
+	// Proper fix shoud be available in 4.13 through modifying the native code 
+	frame[0] = new sun.awt.X11.XEmbeddedFrame(handle, true);
 	parent.setData(EMBEDDED_FRAME_KEY, frame[0]);
 	if (Device.DEBUG) {
 		setDebug(frame[0], true);
@@ -231,7 +229,7 @@ public static Frame new_Frame (final Composite parent) {
 				});
 				break;
 			case SWT.Resize:
-				final Rectangle clientArea = DPIUtil.autoScaleUp(parent.getClientArea());
+				final Rectangle clientArea = parent.getClientArea();
 				EventQueue.invokeLater(() -> frame[0].setSize (clientArea.width, clientArea.height));
 				break;
 		}
@@ -241,7 +239,7 @@ public static Frame new_Frame (final Composite parent) {
 
 	parent.getDisplay().asyncExec(() -> {
 		if (parent.isDisposed()) return;
-		final Rectangle clientArea = DPIUtil.autoScaleUp(parent.getClientArea());
+		final Rectangle clientArea = parent.getClientArea();
 		EventQueue.invokeLater(() -> {
 			frame[0].setSize (clientArea.width, clientArea.height);
 			frame[0].validate ();
