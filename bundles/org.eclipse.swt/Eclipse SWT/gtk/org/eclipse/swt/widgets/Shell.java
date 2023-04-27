@@ -3467,7 +3467,7 @@ Point getSurfaceOrigin () {
 	private void popupDialogToFront(Composite parent) {
 		if (parent != null) {
 			if (parent.getShell().getFullScreen()) {
-				GTK.gtk_window_set_type_hint(shellHandle, GDK.GDK_WINDOW_TYPE_HINT_DIALOG);
+				GTK3.gtk_window_set_type_hint(shellHandle, GDK.GDK_WINDOW_TYPE_HINT_DIALOG);
 			}
 			Composite anchestor = parent.getParent();
 			popupDialogToFront(anchestor);

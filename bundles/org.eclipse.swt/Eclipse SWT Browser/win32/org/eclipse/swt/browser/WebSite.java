@@ -553,6 +553,7 @@ int MapUrlToZone(long pwszUrl, long pdwZone, int dwFlags) {
 	    if (isForceTrusted) {
 		OS.MoveMemory(pdwZone, new int[] {IE.URLZONE_INTRANET}, 4);
 		return COM.S_OK;
+	    }
 	}
 	return IE.INET_E_DEFAULT_ACTION;
 }

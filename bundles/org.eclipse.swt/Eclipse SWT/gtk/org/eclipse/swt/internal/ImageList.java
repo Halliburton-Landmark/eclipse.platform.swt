@@ -277,10 +277,6 @@ public void remove(Image image) {
 	}
 }
 
-public void replacePixbuf (int index, long pixbuf) {
-    pixbufs[index] = pixbuf;
-}
-
 void set (int index, Image image) {
 	long surface = convertSurface(image);
 	int w = Cairo.cairo_image_surface_get_width(surface);
