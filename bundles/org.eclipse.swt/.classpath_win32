@@ -25,5 +25,8 @@
 	<classpathentry kind="src" path="Eclipse SWT Browser/win32"/>
 	<classpathentry kind="src" path="Eclipse SWT OpenGL/win32"/>
 	<classpathentry kind="src" path="Eclipse SWT OpenGL/common"/>
+	<classpathentry kind="lib" path="batik/batik-all-1.17.jar"/>
+	<classpathentry kind="lib" path="batik/xml-apis-ext-1.3.04.jar"/>
+	<classpathentry kind="lib" path="batik/xmlgraphics-commons-2.9.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

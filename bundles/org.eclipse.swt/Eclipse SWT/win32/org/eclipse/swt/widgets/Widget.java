@@ -908,6 +908,7 @@ void releaseParent () {
 void releaseWidget () {
 	eventTable = null;
 	data = null;
+	state &= ~KEYED_DATA;
 }
 
 /**
