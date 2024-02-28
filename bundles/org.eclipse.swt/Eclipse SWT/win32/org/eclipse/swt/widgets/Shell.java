@@ -726,10 +726,20 @@ void destroyToolTip (ToolTip toolTip) {
 	toolTip.id = -1;
 }
 
+/*
+* To make destroyWidget() more robust we use try/catch around fixActiveShell
+*/
 @Override
+
+/*
+* To make destroyWidget() more robust we use try/catch around fixActiveShell
+*/
 void destroyWidget () {
-	fixActiveShell ();
-	super.destroyWidget ();
+	try {
+		fixActiveShell ();
+	} finally {
+		super.destroyWidget ();
+	}
 }
 
 @Override
@@ -822,7 +832,7 @@ void fixActiveShell () {
 	long hwndParent = OS.GetParent (handle);
 	if (hwndParent != 0 && handle == OS.GetActiveWindow ()) {
 		if (!OS.IsWindowEnabled (hwndParent) && OS.IsWindowVisible (hwndParent)) {
-			OS.SetActiveWindow (hwndParent);
+		    OS.EnableWindow(hwndParent, true);
 		}
 	}
 }
