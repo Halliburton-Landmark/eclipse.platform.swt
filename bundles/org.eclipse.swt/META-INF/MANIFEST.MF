@@ -2,11 +2,11 @@ Manifest-Version: 1.0
 Bundle-Name: %pluginName
 Bundle-Vendor: %providerName
 Bundle-SymbolicName: org.eclipse.swt; singleton:=true
-Bundle-Version: 3.124.200.lgc20240221-1200
+Bundle-Version: 3.124.200.lgc20240523-1900
 Bundle-ManifestVersion: 2
 Bundle-Localization: plugin
 DynamicImport-Package: org.eclipse.swt.accessibility2
-Export-Package: 
+Export-Package:
  org.eclipse.swt,
  org.eclipse.swt.accessibility,
  org.eclipse.swt.awt,
