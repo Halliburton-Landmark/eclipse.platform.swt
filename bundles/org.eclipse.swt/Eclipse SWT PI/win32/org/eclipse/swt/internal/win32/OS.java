@@ -904,6 +904,7 @@ public class OS extends C {
 	public static final int MF_SEPARATOR = 0x800;
 	public static final int MF_SYSMENU = 0x2000;
 	public static final int MF_UNCHECKED = 0x0;
+	public static final int MIIM_CHECKMARKS = 0x8;
 	public static final int MIIM_BITMAP = 0x80;
 	public static final int MIIM_DATA = 0x20;
 	public static final int MIIM_FTYPE = 0x100;
@@ -1231,6 +1232,7 @@ public class OS extends C {
 	public static final int SM_CYFOCUSBORDER = 84;
 	public static final int SM_CYHSCROLL = 0x3;
 	public static final int SM_CYMENU = 0xf;
+  public static final int SM_CYMENUCHECK = 72;
 	public static final int SM_CXMINTRACK = 34;
 	public static final int SM_CYMINTRACK = 35;
 	public static final int SM_CXMAXTRACK = 59;
