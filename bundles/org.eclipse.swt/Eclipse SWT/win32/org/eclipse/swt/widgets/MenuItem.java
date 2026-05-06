@@ -49,12 +49,16 @@ public class MenuItem extends Item {
 	/* Image margin. */
 	final static int MARGIN_WIDTH = 1;
 	final static int MARGIN_HEIGHT = 1;
-	// Workaround for: selection indicator is missing for menu item with image on Win11 (#501)
-	// 0= off/system behavior; 1= no image if selected; 2= with overlay marker (default)
-//	private final static int CUSTOM_SELECTION_IMAGE = (OsVersion.IS_WIN11_21H2) ?
-//			Integer.getInteger("org.eclipse.swt.internal.win32.menu.customSelectionImage", 2) : 0;
-  private final static int CUSTOM_SELECTION_IMAGE = 2;
-
+  // Workaround for: selection indicator is missing for menu item with image on Win11 (#501)
+  // 0= off/system behavior; 1= no image if selected; 2= with overlay marker (default)
+  // uncomment when corresponding changes will be replicated during upgrade
+  // private final static int CUSTOM_SELECTION_IMAGE = (OsVersion.IS_WIN11_21H2) ?
+  // Integer.getInteger("org.eclipse.swt.internal.win32.menu.customSelectionImage", 2) : 0;
+  // Simple way to identify win 11
+  // the feature could be tirned off by setting org.eclipse.swt.internal.win32.menu.customSelectionImage=0 even for
+  // windows 11
+  private final static int CUSTOM_SELECTION_IMAGE = System.getProperty("os.name", "").contains("Windows 11")
+          ? Integer.getInteger("org.eclipse.swt.internal.win32.menu.customSelectionImage", 2) : 0;
 
 /**
  * Constructs a new instance of this class given its parent
@@ -834,193 +838,49 @@ private void updateImage () {
 	OS.SetMenuItemInfo (hMenu, id, false, info);
 	parent.redraw ();
 }
+
 private void initCustomSelectedImage() {
-	Image image = this.image;
-	if (image == null) {
-		return;
-	}
-	Rectangle imageBounds = image.getBounds();
-	Color foregroundColor = increaseContrast((display.menuBarForegroundPixel != -1) ? Color.win32_new (this.display, display.menuBarForegroundPixel) : parent.getForeground());
-	Color backgroundColor = increaseContrast((display.menuBarBackgroundPixel != -1) ? Color.win32_new (this.display, display.menuBarBackgroundPixel) : parent.getBackground());
-	backgroundColor = new Color(144,200,246); // Force black background to get white check/radio mark
-
-  // Clone with new background
-  ImageData data = image.getImageData();
-  int imageWidth=data.width;
-  int imageHeight=data.height;
-
-  imageSelected = new Image(display, Math.max(25,data.width),Math.max(25, data.height));
-
-  GC gc = new GC(imageSelected);
-  // Fill background with chosen color
-  gc.setBackground(backgroundColor);
-  gc.fillRectangle(imageSelected.getBounds());
-
-  // Draw original image on top
-  gc.setAdvanced(true);
-  int width= imageSelected.getBounds().width;
-  int height= imageSelected.getBounds().height;
-  System.out.println("MenuItem image area: " + width + "x" + height+": Original image size: " + imageWidth + "x" + imageHeight);
-  if (imageWidth < width || imageHeight < height) {
-      // Center the image if it's smaller than the menu item image area
-      int x = (width - imageWidth)/2;
-      int y = (height - imageHeight) / 2;
-      gc.drawImage(image, x, y);
-  } else {
-  gc.drawImage(image, 0, 0);
-  }
-  gc.dispose();
-
-	/*
-	ImageGcDrawer drawer = new ImageGcDrawer() {
-		@Override
-		public int getGcStyle() {
-			return SWT.TRANSPARENT;
-		}
-
-		@Override
-		public void drawOn(GC gc, int imageWidth, int imageHeight) {
-			gc.setAdvanced(true);
-			gc.drawImage(image, imageWidth - imageBounds.width, (imageHeight - imageBounds.height) / 2);
-			gc.setAntialias(SWT.ON);
-			int x = imageWidth - 16;
-			int y = imageHeight / 2 - 8;
-			if ((style & SWT.CHECK) != 0) {
-				drawCheck(gc, foregroundColor, backgroundColor, x, y);
-			}
-			else {
-				drawRadio(gc, foregroundColor, backgroundColor, x, y);
-			}
-		}
-	};
-	imageSelected = new Image(image.getDevice(), drawer,
-			Math.max(imageBounds.width, 16), Math.max(imageBounds.height, 16));
-  */
+    Image image = this.image;
+    if (image == null) {
+        return;
+    }
+    // Clone with new background
+    ImageData data = image.getImageData();
+    int imageWidth = data.width;
+    int imageHeight = data.height;
+    // 25 is another magic number. It is the minimum size of menu item image area in Windows 11.
+    imageSelected = new Image(display, Math.max(25, data.width), Math.max(25, data.height));
+    GC gc = new GC(imageSelected);
+    // magic color from standard Windows theme
+    Color backgroundColor = new Color(144, 200, 246); // Force light blue background to get toggle mark
+    // Fill background with chosen color
+    gc.setBackground(backgroundColor);
+    gc.fillRectangle(imageSelected.getBounds());
+    // Draw original image on top
+    gc.setAdvanced(true);
+    int width = imageSelected.getBounds().width;
+    int height = imageSelected.getBounds().height;
+    if (imageWidth < width || imageHeight < height) {
+        // Center the image if it's smaller than the menu item image area
+        int x = (width - imageWidth) / 2;
+        int y = (height - imageHeight) / 2;
+        gc.drawImage(image, x, y);
+    } else {
+        gc.drawImage(image, 0, 0);
+    }
+    gc.dispose();
 
 }
-private Color increaseContrast(Color color) {
-    return (color.getRed() + color.getGreen() + color.getBlue() > 127 * 3) ? display.getSystemColor(SWT.COLOR_WHITE) : color;
-  }
-/*
-private void drawCheck(GC gc, Color foregroundColor, Color backgroundColor, int x, int y) {
-	int[] points = new int[] { x + 4, y + 10, x + 6, y + 12, x + 12, y + 6 };
-	gc.setLineStyle(SWT.LINE_SOLID);
-	gc.setForeground(backgroundColor);
-	gc.setLineCap(SWT.CAP_ROUND);
-	gc.setLineJoin(SWT.JOIN_ROUND);
-	gc.setAlpha(127);
-	gc.setLineWidth(6);
-	gc.drawPolyline(points);
-	gc.setLineJoin(SWT.JOIN_MITER);
-	gc.setAlpha(255);
-	gc.setLineWidth(3);
-	gc.drawPolyline(points);
-	gc.setForeground(foregroundColor);
-	gc.setLineWidth(1);
-	gc.setLineCap(SWT.CAP_FLAT);
-	gc.drawPolyline(points);
-}
 
-private void drawRadio(GC gc, Color foregroundColor, Color backgroundColor, int x, int y) {
-	gc.setBackground(backgroundColor);
-	gc.setAlpha(127);
-	gc.fillOval(x + 4, y + 5, 8, 8);
-	gc.setAlpha(255);
-	gc.fillOval(x + 5, y + 6, 6, 6);
-	gc.setBackground(foregroundColor);
-	gc.fillOval(x + 6, y + 7, 4, 4);
-}
-
-
-private long getMenuItemIconBitmapHandle(Image image) {
-	if (image == null) {
-		return 0;
-	}
-	if (hBitmap != 0) OS.DeleteObject (hBitmap);
-	int zoom = adaptZoomForMenuItem(getZoom());
-	int zoom = adaptZoomForMenuItem(getZoom(), image);
-	return Display.create32bitDIB (image, zoom);
-}
-
-private int adaptZoomForMenuItem(int currentZoom, Image image) {
-	int primaryMonitorZoomAtAppStartUp = Win32DPIUtils.getPrimaryMonitorZoomAtStartup();
-
-	if (primaryMonitorZoomAtAppStartUp > currentZoom && isQuarterZoom(currentZoom)) {
-		return currentZoom - 25;
-	}
-	if (!isHalfZoom(primaryMonitorZoomAtAppStartUp) && isHalfZoom(currentZoom)) {
-		// Use the size recommended by System Metrics. This value only holds
-		// for this case and does not work consistently for other cases.
-		double expectedSize = getSystemMetrics(OS.SM_CYMENUCHECK);
-		return (int) ((expectedSize / image.getBounds().height) * 100);
-	}
-	return currentZoom;
-}
-*/
 private long getMenuItemIconSelectedBitmapHandle() {
     Image image = imageSelected;
     if (image == null) {
-      return 0;
+        return 0;
     }
-    if (hBitmapSelected != 0) OS.DeleteObject (hBitmapSelected);
-//    int zoom = adaptZoomForMenuItem(getZoom(), image);
-    return hBitmapSelected = Display.create32bitDIB (image);
-  }
-boolean autoScaleDisabled = false;
-public int nativeZoom;
-private int adaptZoomForMenuItem(int currentZoom, Image image) {
-    int primaryMonitorZoomAtAppStartUp = getPrimaryMonitorZoomAtStartup();
-    /*
-     * Windows has inconsistent behavior when setting the size of MenuItem image and
-     * hence we need to adjust the size of the images as per different kind of zoom
-     * level, i.e. full (100s), half (50s) and quarter (25s). The image size per
-     * zoom level is also affected by the primaryMonitorZoomAtAppStartUp. The
-     * implementation below is based on the pattern observed for all the zoom values
-     * and what fits the best for these zoom level types.
-     */
-    if (primaryMonitorZoomAtAppStartUp > currentZoom && isQuarterZoom(currentZoom)) {
-      return currentZoom - 25;
-    }
-    if (!isHalfZoom(primaryMonitorZoomAtAppStartUp) && isHalfZoom(currentZoom)) {
-      // Use the size recommended by System Metrics. This value only holds
-      // for this case and does not work consistently for other cases.
-      double expectedSize = getSystemMetrics(OS.SM_CYMENUCHECK);
-      return (int) ((expectedSize / image.getBounds().height) * 100);
-    }
-    return currentZoom;
-  }
-int getSystemMetrics(int nIndex) {
-    return OS.GetSystemMetrics(nIndex);
-  }
-private static int getPrimaryMonitorZoomAtStartup() {
-    long hDC = OS.GetDC(0);
-    int dpi = OS.GetDeviceCaps(hDC, OS.LOGPIXELSX);
-    OS.ReleaseDC(0, hDC);
-    return DPIUtil.mapDPIToZoom(dpi);
-  }
-
-private static final int DPI_ZOOM_100 = 96;
-private  static int mapZoomToDPI (int zoom) {
-    double dpi = (double) zoom / 100 * DPI_ZOOM_100;
-    int roundedDpi = (int) Math.round (dpi);
-    return roundedDpi;
-  }
-
-  private static boolean isHalfZoom(int zoom) {
-    return zoom % 50 == 0 && zoom % 100 != 0;
-  }
-
-  private static boolean isQuarterZoom(int zoom) {
-    return zoom % 10 != 0 && zoom % 25 == 0;
-  }
-
-int getZoom() {
-    if (autoScaleDisabled) {
-      return 100;
-    }
-    return 100;
-//    return DPIUtil.getZoomForAutoscaleProperty(nativeZoom);
-  }
+    if (hBitmapSelected != 0)
+        OS.DeleteObject(hBitmapSelected);
+    return hBitmapSelected = Display.create32bitDIB(image);
+}
 
 /**
  * Sets the receiver's pull down menu to the argument.
