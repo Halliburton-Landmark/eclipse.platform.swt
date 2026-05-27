@@ -42,11 +42,23 @@ import org.eclipse.swt.internal.win32.*;
 public class MenuItem extends Item {
 	Menu parent, menu;
 	long hBitmap;
+	Image imageSelected;
+	long hBitmapSelected;
 	int id, accelerator, userId, index;
 	ToolTip itemToolTip;
 	/* Image margin. */
 	final static int MARGIN_WIDTH = 1;
 	final static int MARGIN_HEIGHT = 1;
+  // Workaround for: selection indicator is missing for menu item with image on Win11 (#501)
+  // 0= off/system behavior; 1= no image if selected; 2= with overlay marker (default)
+  // uncomment when corresponding changes will be replicated during upgrade
+  // private final static int CUSTOM_SELECTION_IMAGE = (OsVersion.IS_WIN11_21H2) ?
+  // Integer.getInteger("org.eclipse.swt.internal.win32.menu.customSelectionImage", 2) : 0;
+  // Simple way to identify win 11
+  // the feature could be tirned off by setting org.eclipse.swt.internal.win32.menu.customSelectionImage=0 even for
+  // windows 11
+  private final static int CUSTOM_SELECTION_IMAGE = System.getProperty("os.name", "").contains("Windows 11")
+          ? Integer.getInteger("org.eclipse.swt.internal.win32.menu.customSelectionImage", 2) : 0;
 
 /**
  * Constructs a new instance of this class given its parent
@@ -552,6 +564,12 @@ void releaseWidget () {
 	super.releaseWidget ();
 	if (hBitmap != 0) OS.DeleteObject (hBitmap);
 	hBitmap = 0;
+	if (hBitmapSelected != 0) OS.DeleteObject (hBitmapSelected);
+	hBitmapSelected = 0;
+	if (imageSelected != null) {
+		imageSelected.dispose();
+		imageSelected = null;
+	}
 	if (accelerator != 0) {
 		parent.destroyAccelerators ();
 	}
@@ -783,6 +801,18 @@ public void setImage (Image image) {
 	if (this.image == image) return;
 	if ((style & SWT.SEPARATOR) != 0) return;
 	super.setImage (image);
+	if (imageSelected != null) {
+		imageSelected.dispose();
+		imageSelected = null;
+	}
+	if ((style & (SWT.CHECK | SWT.RADIO)) != 0 && CUSTOM_SELECTION_IMAGE > 1
+			&& image != null && getSelection()) {
+		initCustomSelectedImage();
+	}
+	updateImage();
+}
+
+private void updateImage () {
 	MENUITEMINFO info = new MENUITEMINFO ();
 	info.cbSize = MENUITEMINFO.sizeof;
 	info.fMask = OS.MIIM_BITMAP;
@@ -791,7 +821,15 @@ public void setImage (Image image) {
 	} else {
 		if (OS.IsAppThemed ()) {
 			if (hBitmap != 0) OS.DeleteObject (hBitmap);
-			info.hbmpItem = hBitmap = image != null ? Display.create32bitDIB (image) : 0;
+			hBitmap = image != null ? Display.create32bitDIB (image) : 0;
+			if ((style & (SWT.CHECK | SWT.RADIO)) != 0 && CUSTOM_SELECTION_IMAGE > 0) {
+				info.fMask |= OS.MIIM_CHECKMARKS;
+				info.hbmpUnchecked = hBitmap;
+				info.hbmpChecked = getMenuItemIconSelectedBitmapHandle();
+			}
+			else {
+				info.hbmpItem = hBitmap;
+			}
 		} else {
 			info.hbmpItem = image != null ? OS.HBMMENU_CALLBACK : 0;
 		}
@@ -799,6 +837,49 @@ public void setImage (Image image) {
 	long hMenu = parent.handle;
 	OS.SetMenuItemInfo (hMenu, id, false, info);
 	parent.redraw ();
+}
+
+private void initCustomSelectedImage() {
+    Image image = this.image;
+    if (image == null) {
+        return;
+    }
+    // Clone with new background
+    ImageData data = image.getImageData();
+    int imageWidth = data.width;
+    int imageHeight = data.height;
+    // 25 is another magic number. It is the minimum size of menu item image area in Windows 11.
+    imageSelected = new Image(display, Math.max(25, data.width), Math.max(25, data.height));
+    GC gc = new GC(imageSelected);
+    // magic color from standard Windows theme
+    Color backgroundColor = new Color(144, 200, 246); // Force light blue background to get toggle mark
+    // Fill background with chosen color
+    gc.setBackground(backgroundColor);
+    gc.fillRectangle(imageSelected.getBounds());
+    // Draw original image on top
+    gc.setAdvanced(true);
+    int width = imageSelected.getBounds().width;
+    int height = imageSelected.getBounds().height;
+    if (imageWidth < width || imageHeight < height) {
+        // Center the image if it's smaller than the menu item image area
+        int x = (width - imageWidth) / 2;
+        int y = (height - imageHeight) / 2;
+        gc.drawImage(image, x, y);
+    } else {
+        gc.drawImage(image, 0, 0);
+    }
+    gc.dispose();
+
+}
+
+private long getMenuItemIconSelectedBitmapHandle() {
+    Image image = imageSelected;
+    if (image == null) {
+        return 0;
+    }
+    if (hBitmapSelected != 0)
+        OS.DeleteObject(hBitmapSelected);
+    return hBitmapSelected = Display.create32bitDIB(image);
 }
 
 /**
@@ -949,6 +1030,12 @@ public void setSelection (boolean selected) {
 	if (!success) error (SWT.ERROR_CANNOT_SET_SELECTION);
 	info.fState &= ~OS.MFS_CHECKED;
 	if (selected) info.fState |= OS.MFS_CHECKED;
+	if (selected && CUSTOM_SELECTION_IMAGE > 1 && hBitmap != 0 && imageSelected == null) {
+		initCustomSelectedImage();
+		info.fMask |= OS.MIIM_CHECKMARKS;
+		info.hbmpUnchecked = hBitmap;
+		info.hbmpChecked = getMenuItemIconSelectedBitmapHandle();
+	}
 	success = OS.SetMenuItemInfo (hMenu, id, false, info);
 	if (!success) {
 		/*
